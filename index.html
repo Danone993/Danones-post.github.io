@@ -1,322 +1,668 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Молдавская прослушка | Архив проектов</title>
-    <style>
-        /* --- ЦВЕТОВЫЕ ПАЛИТРЫ (СТИЛИСТИКА ФОКСФОРД) --- */
-        [data-theme="dark"] {
-            --bg-color: #18191a;         
-            --surface-color: #242526;    
-            --text-main: #f5f6f7;        
-            --text-muted: #90949c;       
-            --accent-color: #ff6b35;     
-            --border-color: #3a3b3c;     
-            --shadow: rgba(0, 0, 0, 0.4);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Молдавская прослушка — образовательный проект и сборник аналитических постов.">
+  <title>Молдавская прослушка</title>
 
-        [data-theme="light"] {
-            --bg-color: #f0f2f5;         
-            --surface-color: #ffffff;    
-            --text-main: #1c1e21;        
-            --text-muted: #606770;       
-            --accent-color: #fa541c;     
-            --border-color: #e4e6eb;     
-            --shadow: rgba(0, 0, 0, 0.05);
-        }
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --text: #1c1e21;
+      --muted: #65676b;
+      --accent: #fa541c;
+      --accent-hover: #e64a19;
+      --border: #e4e6eb;
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+      --header-bg: rgba(240, 242, 245, 0.88);
+    }
 
-        /* --- БАЗОВАЯ ЭРГОНОМИКА --- */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            transition: background-color 0.25s, color 0.25s, border-color 0.25s;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
+    body.dark {
+      --bg: #18191a;
+      --card: #242526;
+      --text: #f5f6f7;
+      --muted: #b0b3b8;
+      --accent: #ff6b35;
+      --accent-hover: #ff7b4d;
+      --border: #3a3b3c;
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      --header-bg: rgba(24, 25, 26, 0.88);
+    }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding-bottom: 80px;
-            line-height: 1.6;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+    html {
+      scroll-behavior: smooth;
+    }
 
-        header {
-            padding: 25px 0;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      line-height: 1.7;
+      transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+    }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
+    button,
+    input {
+      font: inherit;
+    }
 
-        .logo span {
-            color: var(--accent-color);
-        }
+    button {
+      cursor: pointer;
+    }
 
-        .theme-toggle {
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            padding: 10px 20px;
-            border-radius: 24px;
-            color: var(--text-main);
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            box-shadow: var(--shadow);
-        }
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.3s ease;
+    }
 
-        .theme-toggle:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
+    .header-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
 
-        .manifesto {
-            padding: 50px 0;
-        }
+    .logo {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      white-space: nowrap;
+    }
 
-        .manifesto h1 {
-            font-size: 2.4rem;
-            line-height: 1.25;
-            margin-bottom: 15px;
-            font-weight: 800;
-            letter-spacing: -0.8px;
-        }
+    .logo span {
+      color: var(--accent);
+    }
 
-        .manifesto p {
-            font-size: 1.15rem;
-            color: var(--text-muted);
-        }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        .search-section {
-            margin-bottom: 35px;
-        }
+    .theme-button {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      min-width: 46px;
+      height: 46px;
+      padding: 0 14px;
+      border-radius: 14px;
+      transition:
+        transform 0.2s ease,
+        background-color 0.2s ease;
+    }
 
-        .search-bar {
-            width: 100%;
-            padding: 16px 22px;
-            background-color: var(--surface-color);
-            border: 2px solid var(--border-color);
-            border-radius: 14px;
-            color: var(--text-main);
-            font-size: 1rem;
-            outline: none;
-            box-shadow: var(--shadow);
-        }
+    .theme-button:hover {
+      transform: translateY(-2px);
+    }
 
-        .search-bar:focus {
-            border-color: var(--accent-color);
-        }
+    .container {
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+    }
 
-        .posts-list {
-            display: flex;
-            flex-direction: column;
-            gap: 35px;
-        }
+    .hero {
+      padding: 80px 0 45px;
+    }
 
-        .post-card {
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 35px;
-            box-shadow: var(--shadow);
-        }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
 
-        .category-tag {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--accent-color);
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: inline-block;
-        }
+    .hero h1 {
+      max-width: 900px;
+      margin: 0 0 22px;
+      font-size: clamp(36px, 6vw, 68px);
+      line-height: 1.05;
+      letter-spacing: -2.5px;
+    }
 
-        .post-card h2 {
-            font-size: 1.75rem;
-            margin-bottom: 20px;
-            font-weight: 800;
-            line-height: 1.3;
-        }
+    .hero h1 span {
+      color: var(--accent);
+    }
 
-        .post-content {
-            font-size: 1.05rem;
-            line-height: 1.65;
-            color: var(--text-main);
-            white-space: pre-line;
-        }
+    .hero-description {
+      max-width: 800px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.65;
+    }
 
-        .post-tags {
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 12px;
-        }
+    .search-section {
+      padding: 10px 0 35px;
+    }
 
-        .tag {
-            font-size: 0.9rem;
-            color: var(--accent-color);
-            font-weight: 600;
-        }
+    .search-box {
+      position: relative;
+    }
 
-        .tg-emoji {
-            display: inline-block;
-            font-style: normal;
-            vertical-align: middle;
-            margin: 0 2px;
-        }
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 20px;
+      pointer-events: none;
+    }
 
-        .scroll-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background-color: var(--accent-color);
-            color: #ffffff;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-            z-index: 100;
-        }
+    .search-input {
+      width: 100%;
+      height: 58px;
+      padding: 0 20px 0 52px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      outline: none;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
 
-        .scroll-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-        }
+    .search-input::placeholder {
+      color: var(--muted);
+    }
 
-        .hidden {
-            display: none !important;
-        }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(250, 84, 28, 0.12);
+    }
 
-        .no-results {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-            font-style: italic;
-        }
-    </style>
+    .posts {
+      padding: 10px 0 80px;
+      display: grid;
+      gap: 28px;
+    }
+
+    .post {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: clamp(22px, 4vw, 40px);
+      box-shadow: var(--shadow);
+      transition:
+        background-color 0.3s ease,
+        transform 0.25s ease,
+        opacity 0.25s ease;
+    }
+
+    .post:hover {
+      transform: translateY(-2px);
+    }
+
+    .post.hidden {
+      display: none;
+    }
+
+    .post-category {
+      display: inline-block;
+      margin-bottom: 13px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(250, 84, 28, 0.1);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .post h2 {
+      margin: 0 0 28px;
+      font-size: clamp(27px, 4vw, 42px);
+      line-height: 1.15;
+      letter-spacing: -1px;
+    }
+
+    .post h3 {
+      margin: 34px 0 12px;
+      font-size: clamp(20px, 3vw, 26px);
+      line-height: 1.25;
+    }
+
+    .post h3:first-of-type {
+      margin-top: 0;
+    }
+
+    .post p {
+      margin: 0 0 18px;
+      color: var(--text);
+      font-size: 17px;
+    }
+
+    .post ul {
+      margin: 0 0 22px;
+      padding-left: 25px;
+    }
+
+    .post li {
+      margin-bottom: 13px;
+      font-size: 17px;
+    }
+
+    .post strong {
+      font-weight: 800;
+    }
+
+    .tg-emoji {
+      display: inline-block;
+      font-style: normal;
+      line-height: 1;
+    }
+
+    .no-results {
+      display: none;
+      text-align: center;
+      padding: 45px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      color: var(--muted);
+    }
+
+    .no-results.visible {
+      display: block;
+    }
+
+    .footer {
+      padding: 30px 0 45px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .top-button {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 90;
+      width: 54px;
+      height: 54px;
+      border: 0;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 25px;
+      font-weight: 800;
+      box-shadow: 0 8px 25px rgba(250, 84, 28, 0.35);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(15px);
+      transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease,
+        transform 0.25s ease,
+        background-color 0.2s ease;
+    }
+
+    .top-button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-3px);
+    }
+
+    .top-button.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 700px) {
+      .header-inner {
+        min-height: 64px;
+      }
+
+      .logo {
+        font-size: 17px;
+      }
+
+      .theme-button {
+        height: 42px;
+        min-width: 42px;
+        padding: 0 11px;
+      }
+
+      .hero {
+        padding: 55px 0 35px;
+      }
+
+      .hero h1 {
+        letter-spacing: -1.5px;
+      }
+
+      .post {
+        padding: 23px 20px;
+      }
+
+      .post p,
+      .post li {
+        font-size: 16px;
+      }
+
+      .top-button {
+        right: 16px;
+        bottom: 16px;
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
 </head>
+
 <body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="logo" href="#top" aria-label="Молдавская прослушка">
+        Молдавская <span>прослушка</span>
+      </a>
+
+      <div class="header-actions">
+        <button
+          class="theme-button"
+          id="themeToggle"
+          type="button"
+          aria-label="Переключить тему"
+          title="Переключить тему"
+        >
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container">
+        <div class="hero-badge">
+          ✦ Образовательный проект
+        </div>
+
+        <h1>
+          Продвижение гуманных мыслей и искоренение заблуждений на счёт разных тем.
+        </h1>
+
+        <p class="hero-description">
+          Громадный образовательный проект и сборник спонтанных, многогранных аналитических постов. Разбор системных явлений, деконструкция мифов и анализ фактов без приукрашиваний.
+        </p>
+      </div>
+    </section>
+
+    <section class="search-section">
+      <div class="container">
+        <div class="search-box">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input
+            class="search-input"
+            id="searchInput"
+            type="search"
+            placeholder="Поиск по постам..."
+            autocomplete="off"
+            aria-label="Поиск по постам"
+          >
+        </div>
+      </div>
+    </section>
+
+    <section class="posts container" id="posts">
+
+      <article
+        class="post"
+        data-keywords="#шизапост #политика"
+      >
+        <div class="post-category">
+          Культура &amp; Политический символизм
+        </div>
+
+        <h2>Шаман сжёг свои штаны, но почему?</h2>
+
+        <h3>Разбираю символизм фразы «Настало время перемен»</h3>
+
+        <p>
+          «Настало время перемен», думаю вы посчитали это прямой отсылкой на переход из старого в новый образ шамана. Да это так, но всё же тут было не одно значение, а несколько метафорических. Во первых сам переход из тёмного образа в кожаной одежде в светло голубой в светлой одежде (во первых очередь голубой — поддержка ЛГБТ сообщества, а первую очередь геев. Во вторых джинсы были придуманы в США, а значит он поддерживает дружеские отношения по отношению к Америке и Западу), во вторых это означает переход власти от авторитарных Единоросов к либеральным партиям на предстоящих выборах. Агетирует за оппозицию — наш слон
+        </p>
+
+        <h3>Что означает сжигание штанов?</h3>
+
+        <p>
+          Все мы прекрасно помним, что яд Навальному наносили на гульфик трусов. Поэтому шаман и не носит трусов, но силовики не дураки и в этот раз нанесли яд на штаны. А Ярослав в свою очередь разоблачил этот ход чигистов и публично сжёг штаны с ядом в простой русской печи, тем самым показав что видит их насквозь
+        </p>
+
+        <p>
+          Ну или...:
+        </p>
+
+        <p>
+          после того, как Собчак упрекнула Мизулину за то, что её муж шляется в обтягивающих кожаных штанах. А та в свою очередь наорала на мужа из-за этого, после чего Шаман снял эти штаны. Но это слишком скучно и неинтересно, согласитесь?
+        </p>
+      </article>
+
+      <article
+        class="post"
+        data-keywords="#луксмаксинг #гипергамия"
+      >
+        <div class="post-category">
+          Общественные заблуждения &amp; Аналитика
+        </div>
+
+        <h2>Луксмаксинг и Гипергамия</h2>
+
+        <p>
+          Думаю вы часто натыкались на движение так называемого луксмаксинка и общественного мнения, знаменуемого «Гипергамия». Согласно что первому, что второму мнению всё решает внешность, в поддержку чего они выдвигают выжимку из научных исследований. Что сегодня я и собираюсь опровергнуть.
+        </p>
+
+        <h3>Какая вообще аргументация у них по поводу возвышения хорошей внешности по отношению к более худшей?</h3>
+
+        <p>
+          В защиту собственной точки зрения они приводят результаты данного исследования:
+        </p>
+
+        <p>
+          Как показал опрос StandOut CV, подавляющее большинство людей (81,3%) считают, что более привлекательные люди с большей вероятностью будут приняты на работу, а уже работающие — скорее получат повышение по службе или прибавку к зарплате. При этом дело не только в природных данных. 83,4% опрошенных считают, что люди, которые уделяют больше внимания тому, как они выглядят на работе, воспринимаются как более компетентные и профессиональные.
+        </p>
+
+        <p>
+          Но, в любом подобном исследовании говориться о социальных опросах, т.е. о мнении людей, которое может разниться с реальностью. В принципе социальные опросы подобного характера не являются железобетонными доказательством, всё же согласитесь, что профессиональные навыки роляют в принятии на работу больше, чем внешность. Что потом и подтверждается в исследовании. Ведь в первую очередь на любую работу берут по проф навыкам, мало кому в бизнесе выгодно исключительно милое личико всё же.
+        </p>
+
+        <h3>Какая вообще по их мнению наивысшая степень красоты?</h3>
+
+        <p>
+          По их мнению, существует универсальная таблица красоты. Во первых везде ценится маскулинность лица, на что они приводят аргументы, что-то навроде: «животные инстинкты». Хотя по факту, более женственные лица в среднем даже больше привлекают женщин, чем такие мускулинные: «Маскулинная форма лица снижает восприятие как привлекательности, так и женственных качеств личности... Результаты показывают, что предпочтение женщинами женственной формы мужского лица отражает их стремление видеть в партнере более теплые, феминные черты характера». ResearchGate.
+        </p>
+
+        <p>
+          Также луксмаксеры говорят, что рост мужчины очень сильно влияет на поиск партнёра ему. Что женщины сейчас хотят только 190+. Приводя в доказательство данное исследование: В первом исследовании, посвященном тому, как предпочтения в выборе партнера воплощаются в реальный выбор, исследователи проанализировали результаты опроса 10 000 пар по всей Великобритании. Они обнаружили, что более чем в девяти из десяти пар (92,5 процента) мужчина был выше женщины.
+        </p>
+
+        <p>
+          Казалось бы, вот оно. Железобетонное доказательство, но когда этих самых партнёров перепутали абсолютно случайно, то число особо не изменилось, так как мужчина просто в среднем выше девушки. А также заметили, что слишком высокий рост и слишком низкий занижают возможность отношений, но не приводят к нулю. Ещё могу сказать от себя, что хотеть и получить абсолютно разные вещи, они может хотели себе мужа миллионера, а получили ли в итоге? Тоже сомневаюсь.
+        </p>
+
+        <h3>Гипергамия</h3>
+
+        <p>
+          Гипергамия гласит нам о том, что 90% женщин выбирают 30% мужчин. На самом же деле это понятное дело разгон чистой воды, основанный на сайтах знакомств. Мне тут говорить даже нечего. Просто держите пруфы:
+        </p>
+
+        <ul>
+          <li>67% пользователей приложений для знакомств — мужчины, 33% — женщины. Вам не кажется, насколько высока конкуренция. Соотношение буквально 2 к 1.</li>
+          <li>Мужчины в среднем делают 15 609 свайпов вправо, а женщины — всего 2283 свайпа. Один пол устраивает ковровые бомбардировки, другой использует снайперскую винтовку.</li>
+          <li>Средний процент совпадений у женщин в Tinder составляет 44,4%. У мужчин — 5,26%. Это не просто разница. Это такой каньон, в который можно было бы поставить Гранд-Каньон.</li>
+          <li>Женщины отправляют больше сообщений, чем мужчины (в среднем 1790 против 1474), но получают вдвое больше (2727 против 1224). Опыт использования мессенджеров в этих двух приложениях совершенно разный.</li>
+        </ul>
+      </article>
+
+      <div class="no-results" id="noResults">
+        По вашему запросу ничего не найдено.
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="footer">
     <div class="container">
-        <header>
-            <div class="logo">Молдавская прослушка<span>.</span></div>
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Светлая тема</button>
-        </header>
-        <section class="manifesto">
-            <h1>Продвижение гуманных мыслей и искоренение заблуждений на счёт разных тем.</h1>
-            <p>Громадный образовательный проект и сборник спонтанных, многогранных аналитических постов. Разбор системных явлений, деконструкция мифов и анализ фактов без приукрашиваний.</p>
-        </section>
-        <section class="search-section">
-            <input type="text" class="search-bar" id="searchInput" placeholder="Поиск по ключевым словам и хэштегам..." oninput="liveSearch()">
-        </section>
-        <main class="posts-list" id="postsContainer">
-          <!-- ПОСТ 1: ШАМАН -->
-            <div class="post-card" data-keywords="шаман штаны навальный мизулина собчак шизапост политика перемен">
-                <span class="category-tag">Культура & Политический символизм</span>
-                <h2>Шаман сжёг свои штаны, но почему?<i class="tg-emoji">🌟</i></h2>
-                <div class="post-content">
-                    • Разбираю символизм фразы «Настало время перемен»<i class="tg-emoji">⌛️</i>
+      Молдавская прослушка
+    </div>
+  </footer>
 
-                    «Настало время перемен», думаю вы посчитали это прямой отсылкой на переход из старого в новый образ шамана<i class="tg-emoji">🌟</i>. Да это так, но всё же тут было не одно значение, а несколько метафорических<i class="tg-emoji">😂</i>. Во первых сам переход из тёмного образа в кожаной одежде <i class="tg-emoji">👢</i><i class="tg-emoji">◾️</i> в светло голубой в светлой одежде <i class="tg-emoji">🏳️‍🌈</i><i class="tg-emoji">👖</i>(во первых очередь голубой — поддержка ЛГБТ сообщества, а первую очередь геев. Во вторых джинсы были придуманы в США, а значит он поддерживает дружеские отношения по отношению к Америке и Западу), во вторых это означает переход власти от авторитарных Единоросов<i class="tg-emoji">🐻</i> к либеральным партиям<i class="tg-emoji">💗</i> на предстоящих выборах. Агетирует за оппозицию — наш слон
+  <button
+    class="top-button"
+    id="topButton"
+    type="button"
+    aria-label="Прокрутить наверх"
+    title="Наверх"
+  >
+    ↑
+  </button>
 
-                    • Что означает сжигание штанов?<i class="tg-emoji">🔥</i>
+  <script>
+    (() => {
+      const body = document.body;
+      const themeToggle = document.getElementById("themeToggle");
+      const searchInput = document.getElementById("searchInput");
+      const posts = Array.from(document.querySelectorAll(".post"));
+      const noResults = document.getElementById("noResults");
+      const topButton = document.getElementById("topButton");
 
-                    Все мы прекрасно помним, что яд Навальному наносили на гульфик трусов. Поэтому шаман<i class="tg-emoji">🌟</i> и не носит трусов, но силовики не дураки и в этот раз нанесли яд<i class="tg-emoji">☠️</i> на штаны<i class="tg-emoji">🤩</i>. А Ярослав в свою очередь разоблачил этот ход чигистов и публично сжёг штаны с ядом в простой русской печи<i class="tg-emoji">🇷🇺</i>, тем самым показав что видит их насквозь
+      function updateThemeButton() {
+        const isDark = body.classList.contains("dark");
 
-                    Ну или...:<i class="tg-emoji">ℹ️</i>
+        themeToggle.textContent = isDark ? "☀️" : "🌙";
+        themeToggle.setAttribute(
+          "aria-label",
+          isDark ? "Включить светлую тему" : "Включить тёмную тему"
+        );
+        themeToggle.setAttribute(
+          "title",
+          isDark ? "Включить светлую тему" : "Включить тёмную тему"
+        );
+      }
 
-                    после того, как Собчак упрекнула Мизулину за то, что её муж шляется в обтягивающих кожаных штанах. А та в свою очередь наорала на мужа из-за этого, после чего Шаман<i class="tg-emoji">🌟</i> снял эти штаны. Но это слишком скучно и неинтересно<i class="tg-emoji">🙄</i>, согласитесь? <i class="tg-emoji">😋</i>
-                </div>
-                <div class="post-tags">
-                    <span class="tag">#шизапост</span>
-                    <span class="tag">#политика</span>
-                </div>
-            </div>
+      const savedTheme = localStorage.getItem("theme");
 
-            <!-- ПОСТ 2: ЛУКСМАКСИНГ -->
-            <div class="post-card" data-keywords="луксмаксинг гипергамия внешность соцопросы тиндер тандем">
-                <span class="category-tag">Общественные заблуждения & Аналитика</span>
-                <h2>Луксмаксинг и Гипергамия</h2>
-                <div class="post-content">
-                    Думаю вы часто натыкались на движение так называемого луксмаксинка и общественного мнения, знаменуемого «Гипергамия». Согласно что первому, что второму мнению всё решает внешность, в поддержку чего они выдвигают выжимку из научных исследований. Что сегодня я и собираюсь опровергнуть.
+      if (
+        savedTheme === "dark" ||
+        (
+          savedTheme === null &&
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        )
+      ) {
+        body.classList.add("dark");
+      }
 
-                    • Какая вообще аргументация у них по поводу возвышения хорошей внешности по отношению к более худшей?
-                    В защиту собственной точки зрения они приводят результаты данного исследования:
-                    Как показал опрос StandOut CV, подавляющее большинство людей (81,3%) считают, что более привлекательные люди с большей вероятностью будут приняты на работу, а уже работающие — скорее получат повышение по службе или прибавку к зарплате. При этом дело не только в природных данных. 83,4% опрошенных считают, что люди, которые уделяют больше внимания тому, как они выглядят на работе, воспринимаются как более компетентные и профессиональные.
-                    Но, в любом подобном исследовании говориться о социальных опросах, т.е. о мнении людей, которое может разниться с реальностью. В принципе социальные опросы подобного характера не являются железобетонными доказательством, всё же согласитесь, что профессиональные навыки роляют в принятии на работу больше, чем внешность. Что потом и подтверждается в исследовании. Ведь в первую очередь на любую работу берут по проф навыкам, мало кому в бизнесе выгодно исключительно милое личико всё же.
+      updateThemeButton();
 
-                    • Какая вообще по их мнению наивысшая степень красоты?
-                    По их мнению, существует универсальная таблица красоты. Во первых везде ценится маскулинность лица, на что они приводят аргументы, что-то навроде: «животные инстинкты». Хотя по факту, более женственные лица в среднем даже больше привлекают женщин, чем такие мускулинные: «Маскулинная форма лица снижает восприятие как привлекательности, так и женственных качеств личности... Результаты показывают, что предпочтение женщинами женственной формы мужского лица отражает их стремление видеть в партнере более теплые, феминные черты характера». ResearchGate.
-                    Также луксмаксеры говорят, что рост мужчины очень сильно влияет на поиск партнёра ему. Что женщины сейчас хотят только 190+. Приводя в доказательство данное исследование: В первом исследовании, посвященном тому, как предпочтения в выборе партнера воплощаются в реальный выбор, исследователи проанализировали результаты опроса 10 000 пар по всей Великобритании. Они обнаружили, что более чем в девяти из десяти пар (92,5 процента) мужчина был выше женщины.
-                    Казалось бы, вот оно. Железобетонное доказательство, но когда этих самых партнёров перепутали абсолютно случайно, то число особо не изменилось, так как мужчина просто в среднем выше девушки. А также заметили, что слишком высокий рост и слишком низкий занижают возможность отношений, но не приводят к нулю. Ещё могу сказать от себя, что хотеть и получить абсолютно разные вещи, они может хотели себе мужа миллионера, а получили ли в итоге? Тоже сомневаюсь.
-                  • Гипергамия
-                    Гипергамия гласит нам о том, что 90% женщин выбирают 30% мужчин. На самом же деле это понятное дело разгон чистой воды, основанный на сайтах знакомств. Мне тут говорить даже нечего. Просто держите пруфы:
-                    • 67% пользователей приложений для знакомств — мужчины, 33% — женщины. Вам не кажется, насколько высока конкуренция. Соотношение буквально 2 к 1.
-                    • Мужчины в среднем делают 15 609 свайпов вправо, а женщины — всего 2283 свайпа. Один пол устраивает ковровые бомбардировки, другой использует снайперскую винтовку.
-                    • Средний процент совпадений у женщин в Tinder составляет 44,4%. У мужчин — 5,26%. Это не просто разница. Это такой каньон, в который можно было бы поставить Гранд-Каньон.
-                    • Женщины отправляют больше сообщений, чем мужчины (в среднем 1790 против 1474), но получают вдвое больше (2727 против 1224). Опыт использования мессенджеров в этих двух приложений совершенно разный.
-                </div>
-                <div class="post-tags">
-                    <span class="tag">#шизапост</span>
-                    <span class="tag">#луксмаксинг</span>
-                    <span class="tag">#гипергамия</span>
-                </div>
-            </div>
+      themeToggle.addEventListener("click", () => {
+        body.classList.toggle("dark");
 
-            <!-- ПОСТ 3: ВЫБОРЫ -->
-            <div class="post-card" data-keywords="выборы госдума кпрф яблоко николаев 2026 политика оппозиция">
-                <span class="category-tag">Политика & Структуры</span>
-                <h2>Вот и настал день Х. Выборы в государственную думу</h2>
-                <div class="post-content">
-                    С 18 по 20 числа включительно пройдёт голосование за депутатов войдущих в парламент. Сначало на всякий случай объясню саму изберательную систему выборов:
-                    
-                    ^ В самой Госдуме будет заседать 450 депутатов, из которых 225 по одномандатным округам и 225 по федеральному избирательному кругу.
-                    
-                    Одномандатники — депутаты, которых выбирают в зависимости от конкретного географического положения (округа), где разыгрывается всего один мандат.
-                    По федеральным спискам — депутаты, избираемые по партийным спискам (тут голосование за партии в целом, не за определённых людей). Партии набравшие менее 5% не войдут в Госдуму, а их голоса распределятся между партиями победителями. В первую очередь по этим спискам войдут в Госдуму лидеры партий, самые известные лица из партии.
-                    
-                    Ну чтож, давайте уже переходить к самим выбором между партий.
-                    
-                    1. За кого я бы проголосовал (относительно собственного лево-либерального мнения)?
-                    Я бы проголосовал в нынешней ситуации за КПРФ и Николаева Владимира Валерьевича (от партии Яблоко). Аргументирую свою точку зрения:
-                    В нынешщее время КПРФ — самая независимая партия, так как создана была ещё до Путина во власти и до сих пор с одним и тем же лидером. Да, лидер этот сильно зигующий, но в семье не без уродов. В КПРФ больше всего оппозиционных кандидатов и сама по себе партия менее подконтрольная, чем их конкуренты — новые люди.
-                    Тепрь перехожу к одномандатнику Николаеву Владимиру Валерьевичу (от партии Яблоко). «Почему он?» — потому что он, является самым антивоенным кандидатом в моём выборе. Даже новолюд у нас зигует (про единороску вообще промолчу). Если бы я выбирал в любом другом округе, то действовал бы по точно такой же логике, чем менее зигунутый, тем более хороший кандидат.
-                    
-                    2. А за какую партию вообще целесообразно голосовать?
-                    Нельзя голосовать за «Единую Россию» (по понятным причинам), «Зелёные», «Партия пенсионеров» (эти партии банально не парламентские). Но также желательно не голосовать за партию «Справедливая Россия», ибо сама партия далеко не самая популярная и думаю, что за неё проголосует 3 человека дай бог. Также я бы не рекомендовал голосовать за «ЛДПР», тут уже просто моё личное мнение. так как политика Жириновского, что наследников его партии мне не особо нравится. И лучший выбор это КПРФ / Новые люди. Здесь уже выбор оставлю при вас, ибо каждая из партий заслуживает своего голоса. Ну и лучшая была бы Яблоко, но её сняли. Так что вот так.
-                    
-                    ^ А какой наш главный враг на этих выборах?
-                    Меланхолия и пессимизм. Зачем идти на эти выборы, если итак итак всё нарисуют? — нарисовать вполне могут, но если у них есть запланированные спорные решения после выборов (мобилизация по слухам и чёрт его знает что ещё) они могут подвинуть дедлайны. Тоесть просто побоятся, что им не хватит политического ресурса на то или иное действие. И другие вопросы можете написать в комментариях, я других не вспомнил.
-                    
-                    Итог:
-                    Идти на выборы важно и нужно, ведь выборы могут повлиять либо на обстановку в парламенте. Либо предотвратить или отложить некоторые решения властей, либо же и то и другое. Идите и голосуйте против войны и блокировок! (Ну пожалуйста)
-                </div>
-                <div class="post-tags">
-                    <span class="tag">#политика</span>
-                    <span class="tag">#выборы</span>
-                    <span class="tag">#шизапост</span>
-                </div>
-            </div>
+        localStorage.setItem(
+          "theme",
+          body.classList.contains("dark") ? "dark" : "light"
+        );
+
+        updateThemeButton();
+      });
+
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+        let visiblePosts = 0;
+
+        posts.forEach((post) => {
+          const keywords = (post.dataset.keywords || "").toLowerCase();
+          const text = post.textContent.toLowerCase();
+
+          const matches =
+            query === "" ||
+            keywords.includes(query) ||
+            text.includes(query);
+
+          post.classList.toggle("hidden", !matches);
+
+          if (matches) {
+            visiblePosts++;
+          }
+        });
+
+        noResults.classList.toggle("visible", visiblePosts === 0);
+      });
+
+      function updateTopButton() {
+        if (window.scrollY > 450) {
+          topButton.classList.add("visible");
+        } else {
+          topButton.classList.remove("visible");
+        }
+      }
+
+      window.addEventListener("scroll", updateTopButton, {
+        passive: true
+      });
+
+      topButton.addEventListener("click", () => {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      });
+
+      updateTopButton();
+    })();
+  </script>
+
+</body>
+</html>
