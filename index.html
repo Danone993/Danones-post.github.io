@@ -565,8 +565,47 @@
       .mobile-settings { position:absolute; top:calc(100% + 8px); right:16px; width:min(320px, calc(100vw - 32px)); padding:16px; border:1px solid var(--border); border-radius:18px; background:var(--card); box-shadow:var(--shadow); color:var(--text); }
       .mobile-settings.open { display:block; }
       .mobile-settings-title { font-size:17px; font-weight:800; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-      .mobile-setting-row { min-height:50px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--border); }
+      .mobile-setting-row {
+        min-height:50px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        border-bottom:1px solid var(--border);
+        border-radius:12px;
+        padding:0 8px;
+        margin:0 -8px;
+        transition:background-color .18s ease, transform .18s ease;
+      }
       .mobile-setting-row:last-child { border-bottom:0; }
+      .mobile-setting-row:hover {
+        background:color-mix(in srgb, var(--accent) 7%, transparent);
+      }
+      .mobile-setting-row:active {
+        transform:scale(.985);
+      }
+      .mobile-setting-row > span {
+        transition:transform .18s ease, color .18s ease;
+      }
+      .mobile-setting-row:hover > span {
+        transform:translateX(2px);
+      }
+      .mobile-setting-row select,
+      .mobile-setting-row button {
+        transition:transform .18s ease, background-color .18s ease, border-color .18s ease;
+      }
+      .mobile-setting-row select:focus,
+      .mobile-setting-row button:focus-visible {
+        transform:translateY(-1px);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .mobile-setting-row,
+        .mobile-setting-row > span,
+        .mobile-setting-row select,
+        .mobile-setting-row button {
+          transition:none;
+        }
+      }
       .mobile-setting-row .header-sort { min-width:145px; height:40px; font-size:12px; padding-left:10px; }
       .mobile-setting-row .theme-button { height:40px; min-width:44px; padding:0 10px; }
 
