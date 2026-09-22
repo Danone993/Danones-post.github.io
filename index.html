@@ -686,10 +686,10 @@
         <button class="settings-button" id="settingsToggle" type="button" aria-label="Открыть настройки" aria-expanded="false" title="Настройки">⚙</button>
       </div>
       <div class="mobile-settings" id="mobileSettings" aria-hidden="true">
-        <div class="mobile-settings-title">Настройки</div>
-        <div class="mobile-setting-row"><span>↕️ Сортировка</span><select class="header-sort" id="mobileSortOrder" aria-label="Порядок постов"><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option></select></div>
-        <div class="mobile-setting-row"><span>🌙 Тема</span><button class="theme-button" id="mobileThemeToggle" type="button" aria-label="Переключить тему">🌙</button></div>
-        <div class="mobile-setting-row"><span>🌐 Язык</span><button class="theme-button language-button" id="mobileLanguageToggle" type="button" aria-label="Switch to English">EN</button></div>
+        <div class="mobile-settings-title" id="mobileSettingsTitle">Настройки</div>
+        <div class="mobile-setting-row"><span id="mobileSortLabel">↕️ Сортировка</span><select class="header-sort" id="mobileSortOrder" aria-label="Порядок постов"><option value="newest">Сначала новые</option><option value="oldest">Сначала старые</option></select></div>
+        <div class="mobile-setting-row"><span id="mobileThemeLabel">🌙 Тема</span><button class="theme-button" id="mobileThemeToggle" type="button" aria-label="Переключить тему">🌙</button></div>
+        <div class="mobile-setting-row"><span id="mobileLanguageLabel">🌐 Язык</span><button class="theme-button language-button" id="mobileLanguageToggle" type="button" aria-label="Switch to English">EN</button></div>
       </div>
     </div>
   </header>
@@ -958,6 +958,16 @@
           "title",
           isDark ? "Включить светлую тему" : "Включить тёмную тему"
         );
+
+        const mobileThemeToggle = document.getElementById("mobileThemeToggle");
+        if (mobileThemeToggle) {
+          mobileThemeToggle.textContent = isDark ? "☀️" : "🌙";
+          mobileThemeToggle.setAttribute(
+            "aria-label",
+            isDark ? "Включить светлую тему" : "Включить тёмную тему"
+          );
+          mobileThemeToggle.title = isDark ? "Включить светлую тему" : "Включить тёмную тему";
+        }
       }
 
       const savedTheme = localStorage.getItem("theme");
@@ -1098,6 +1108,11 @@
   };
 
   const languageToggle = document.getElementById("languageToggle");
+  const mobileLanguageToggle = document.getElementById("mobileLanguageToggle");
+  const mobileSettingsTitle = document.getElementById("mobileSettingsTitle");
+  const mobileSortLabel = document.getElementById("mobileSortLabel");
+  const mobileThemeLabel = document.getElementById("mobileThemeLabel");
+  const mobileLanguageLabel = document.getElementById("mobileLanguageLabel");
   const sortOrder = document.getElementById("sortOrder");
   const metaDescription = document.querySelector('meta[name="description"]');
   const brandLink = document.querySelector(".brand-link");
@@ -1128,7 +1143,11 @@
     themeLight: "Включить светлую тему",
     themeDark: "Включить тёмную тему",
     languageEN: "Switch to English",
-    languageRU: "Переключить на русский"
+    languageRU: "Переключить на русский",
+    settingsTitle: "Настройки",
+    sortLabel: "↕️ Сортировка",
+    themeLabel: "🌙 Тема",
+    languageLabel: "🌐 Язык"
   };
 
   const enUI = {
@@ -1147,7 +1166,11 @@
     themeLight: "Switch to light theme",
     themeDark: "Switch to dark theme",
     languageEN: "Switch to English",
-    languageRU: "Switch to Russian"
+    languageRU: "Switch to Russian",
+    settingsTitle: "Settings",
+    sortLabel: "↕️ Sort",
+    themeLabel: "🌙 Theme",
+    languageLabel: "🌐 Language"
   };
 
   let currentLanguage = localStorage.getItem("siteLanguage") === "en" ? "en" : "ru";
@@ -1170,6 +1193,25 @@
     sortOrder.setAttribute("aria-label", isEnglish ? enUI.sortAria : ruUI.sortAria);
     sortOrder.options[0].textContent = isEnglish ? enUI.newest : ruUI.newest;
     sortOrder.options[1].textContent = isEnglish ? enUI.oldest : ruUI.oldest;
+    const mobileSortOrder = document.getElementById("mobileSortOrder");
+    if (mobileSortOrder) {
+      mobileSortOrder.options[0].textContent = isEnglish ? enUI.newest : ruUI.newest;
+      mobileSortOrder.options[1].textContent = isEnglish ? enUI.oldest : ruUI.oldest;
+    }
+    if (mobileSettingsTitle) mobileSettingsTitle.textContent = isEnglish ? enUI.settingsTitle : ruUI.settingsTitle;
+    if (mobileSortLabel) mobileSortLabel.textContent = isEnglish ? enUI.sortLabel : ruUI.sortLabel;
+    if (mobileThemeLabel) {
+      const darkNow = document.body.classList.contains("dark");
+      mobileThemeLabel.textContent = isEnglish
+        ? (darkNow ? "☀️ Theme" : "🌙 Theme")
+        : (darkNow ? "☀️ Тема" : "🌙 Тема");
+    }
+    if (mobileLanguageLabel) mobileLanguageLabel.textContent = isEnglish ? "🌐 Language" : "🌐 Язык";
+    if (mobileLanguageToggle) {
+      mobileLanguageToggle.textContent = isEnglish ? "RU" : "EN";
+      mobileLanguageToggle.setAttribute("aria-label", isEnglish ? ruUI.languageRU : ruUI.languageEN);
+      mobileLanguageToggle.title = isEnglish ? ruUI.languageRU : ruUI.languageEN;
+    }
     noResults.textContent = isEnglish ? enUI.noResults : ruUI.noResults;
     footer.textContent = isEnglish ? enUI.footer : ruUI.footer;
     document.title = isEnglish ? "Moldavskaya Proslushka" : "Молдавская прослушка";
