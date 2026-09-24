@@ -692,6 +692,68 @@
       color: var(--text);
       font-weight: 800;
     }
+
+    .global-stats {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .global-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(0,0,0,.04);
+    }
+    .global-stat strong { color: var(--text); font-weight: 800; }
+    .rating-box {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px 18px;
+    }
+    .rating-info { min-width: 190px; }
+    .rating-title { color: var(--text); font-size: 14px; font-weight: 800; }
+    .rating-summary { margin-top: 2px; color: var(--muted); font-size: 13px; }
+    .rating-stars { display: inline-flex; align-items: center; gap: 2px; }
+    .rating-star {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #b8bec8;
+      font-size: 23px;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform .16s ease, color .16s ease, background-color .16s ease;
+    }
+    .rating-star:hover,
+    .rating-star:focus-visible { color: var(--accent); background: rgba(250,84,28,.08); transform: translateY(-1px); outline: none; }
+    .rating-star.active { color: var(--accent); }
+    .rating-star:disabled { cursor: default; opacity: .72; }
+    .rating-box.voted .rating-star { cursor: default; }
+    .rating-status { flex-basis: 100%; color: var(--muted); font-size: 12px; min-height: 18px; }
+    @media (max-width: 600px) {
+      .global-stats { gap: 8px; }
+      .global-stat { flex: 1 1 calc(50% - 8px); justify-content: center; }
+      .rating-box { align-items: flex-start; }
+      .rating-stars { width: 100%; justify-content: flex-start; }
+    }
+
 </style>
 </head>
 <body>
@@ -733,6 +795,11 @@
           Громадный образовательный проект и сборник спонтанных, многогранных аналитических постов, как-либо связанных с биологией и человеческой физиологией. Разбор системных явлений, деконструкция мифов и анализ фактов.
         </p>
 <div aria-live="polite" class="post-counter" id="postCounter">5 постов</div>
+<div class="global-stats" id="globalStats" aria-live="polite">
+  <div class="global-stat">👁️ <span data-stat-label="today">Сегодня</span>: <strong id="visitsToday">—</strong></div>
+  <div class="global-stat">📅 <span data-stat-label="month">Месяц</span>: <strong id="visitsMonth">—</strong></div>
+  <div class="global-stat">🗓️ <span data-stat-label="year">Год</span>: <strong id="visitsYear">—</strong></div>
+</div>
 </div>
 </section>
 <section class="search-section">
@@ -911,11 +978,6 @@
       </div>
 </section>
 </main>
-<footer class="footer">
-<div class="container">
-      Молдавская прослушка
-    </div>
-</footer>
 <button aria-label="Прокрутить наверх" class="top-button" id="topButton" title="Наверх" type="button">
     ↑
   </button>
@@ -1222,7 +1284,7 @@
       mobileLanguageToggle.title = isEnglish ? ruUI.languageRU : ruUI.languageEN;
     }
     noResults.textContent = isEnglish ? enUI.noResults : ruUI.noResults;
-    footer.textContent = isEnglish ? enUI.footer : ruUI.footer;
+    if (footer) footer.textContent = isEnglish ? enUI.footer : ruUI.footer;
     document.title = isEnglish ? "Moldavskaya Proslushka" : "Молдавская прослушка";
     if (metaDescription) {
       metaDescription.content = isEnglish
@@ -1373,6 +1435,231 @@
   if (mobileSort && sort) { mobileSort.value = sort.value; mobileSort.addEventListener('change', () => { sort.value = mobileSort.value; sort.dispatchEvent(new Event('change', {bubbles:true})); }); sort.addEventListener('change', () => mobileSort.value = sort.value); }
   if (mobileTheme && theme) mobileTheme.addEventListener('click', () => theme.click());
   if (mobileLanguage && language) mobileLanguage.addEventListener('click', () => language.click());
+})();
+</script>
+
+<script>
+(() => {
+  const SUPABASE_URL = "https://bjyfhovdoxhxfsmspsia.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_RKgkQcjeAkju2ed-ppJolw_XjkS6hct";
+  const REST = `${SUPABASE_URL}/rest/v1`;
+  const headers = {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${SUPABASE_KEY}`
+  };
+
+  const postId = post => post.dataset.date || post.querySelector("h2")?.textContent.trim() || "unknown-post";
+  const localVisitKey = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `mp_visit_${y}-${m}-${day}`;
+  };
+
+  function localStart(type) {
+    const now = new Date();
+    if (type === "today") return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (type === "month") return new Date(now.getFullYear(), now.getMonth(), 1);
+    return new Date(now.getFullYear(), 0, 1);
+  }
+
+  async function countVisits(start) {
+    const params = new URLSearchParams({
+      select: "id",
+      visited_at: `gte.${start.toISOString()}`
+    });
+    const response = await fetch(`${REST}/site_visits?${params}`, {
+      method: "GET",
+      headers: { ...headers, Prefer: "count=exact", Range: "0-0" },
+      cache: "no-store"
+    });
+    if (!response.ok) throw new Error(`Visits HTTP ${response.status}`);
+    const range = response.headers.get("content-range") || "";
+    const match = range.match(/\/([0-9]+|\*)$/);
+    if (match && match[1] !== "*") return Number(match[1]);
+    const rows = await response.json();
+    return Array.isArray(rows) ? rows.length : 0;
+  }
+
+  async function registerVisit() {
+    const key = localVisitKey();
+    if (localStorage.getItem(key)) return;
+    try {
+      const response = await fetch(`${REST}/site_visits`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({})
+      });
+      if (response.ok) localStorage.setItem(key, "1");
+    } catch (error) {
+      console.warn("Global visit counter:", error);
+    }
+  }
+
+  async function updateVisitStats() {
+    try {
+      await registerVisit();
+      const [today, month, year] = await Promise.all([
+        countVisits(localStart("today")),
+        countVisits(localStart("month")),
+        countVisits(localStart("year"))
+      ]);
+      const ids = ["visitsToday", "visitsMonth", "visitsYear"];
+      [today, month, year].forEach((value, index) => {
+        const el = document.getElementById(ids[index]);
+        if (el) el.textContent = value.toLocaleString("ru-RU");
+      });
+    } catch (error) {
+      console.warn("Global visit counter:", error);
+    }
+  }
+
+  function visitorId() {
+    const key = "mp_rating_visitor_id";
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(key, id);
+    }
+    return id;
+  }
+
+  function ratingVotedKey(id) { return `mp_rating_voted_${id}`; }
+
+  async function loadRating(post, box) {
+    const id = postId(post);
+    const params = new URLSearchParams({ select: "rating", post_id: `eq.${id}` });
+    try {
+      const response = await fetch(`${REST}/post_ratings?${params}`, { headers, cache: "no-store" });
+      if (!response.ok) throw new Error(`Rating HTTP ${response.status}`);
+      const rows = await response.json();
+      const count = rows.length;
+      const average = count ? rows.reduce((sum, row) => sum + Number(row.rating || 0), 0) / count : 0;
+      box.dataset.ratingAverage = String(average);
+      box.dataset.ratingCount = String(count);
+      renderRatingSummary(box);
+      const voted = !!localStorage.getItem(ratingVotedKey(id));
+      box.classList.toggle("voted", voted);
+      box.querySelectorAll(".rating-star").forEach(button => {
+        button.disabled = voted;
+        button.classList.toggle("active", voted && Number(button.dataset.rating) === Number(localStorage.getItem(ratingVotedKey(id))));
+      });
+    } catch (error) {
+      console.warn("Post rating:", error);
+    }
+  }
+
+  async function submitRating(post, box, rating) {
+    const id = postId(post);
+    const key = ratingVotedKey(id);
+    if (localStorage.getItem(key)) return;
+    const status = box.querySelector(".rating-status");
+    if (status) status.textContent = "Сохраняем оценку…";
+    try {
+      const response = await fetch(`${REST}/post_ratings`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ post_id: id, rating, visitor_id: visitorId() })
+      });
+      if (response.status === 409) {
+        localStorage.setItem(key, String(rating));
+      } else if (!response.ok) {
+        throw new Error(`Rating HTTP ${response.status}`);
+      } else {
+        localStorage.setItem(key, String(rating));
+      }
+      if (status) status.textContent = "Спасибо за оценку!";
+      await loadRating(post, box);
+    } catch (error) {
+      if (status) status.textContent = "Не удалось сохранить оценку. Попробуйте ещё раз.";
+      console.warn("Post rating:", error);
+    }
+  }
+
+  function renderRatingSummary(box) {
+    const summary = box.querySelector(".rating-summary");
+    if (!summary) return;
+    const count = Number(box.dataset.ratingCount || 0);
+    const average = Number(box.dataset.ratingAverage || 0);
+    const en = document.documentElement.lang === "en";
+    if (!count) {
+      summary.textContent = en ? "No ratings yet" : "Пока нет оценок";
+      return;
+    }
+    if (en) {
+      summary.textContent = `${average.toFixed(1)} / 5 · ${count} ${count === 1 ? "vote" : "votes"}`;
+    } else {
+      summary.textContent = `${average.toFixed(1).replace(".", ",")} / 5 · ${count} ${count === 1 ? "голос" : (count < 5 ? "голоса" : "голосов")}`;
+    }
+  }
+
+  function ratingText() {
+    const en = document.documentElement.lang === "en";
+    return {
+      title: en ? "Rate this post" : "Оценить пост",
+      status: en ? "One vote per browser" : "Один голос с одного браузера"
+    };
+  }
+
+  function ensureRatingWidgets() {
+    document.querySelectorAll("article.post").forEach(post => {
+      if (post.querySelector(".rating-box")) return;
+      const date = post.querySelector(".post-date");
+      if (!date) return;
+      const box = document.createElement("div");
+      box.className = "rating-box";
+      const text = ratingText();
+      box.innerHTML = `
+        <div class="rating-info">
+          <div class="rating-title">${text.title}</div>
+          <div class="rating-summary">Загрузка…</div>
+        </div>
+        <div class="rating-stars" role="group" aria-label="${text.title}">
+          ${[1,2,3,4,5].map(n => `<button class="rating-star" type="button" data-rating="${n}" aria-label="${n} из 5">★</button>`).join("")}
+        </div>
+        <div class="rating-status">${text.status}</div>`;
+      date.before(box);
+      box.querySelectorAll(".rating-star").forEach(button => {
+        button.addEventListener("click", () => submitRating(post, box, Number(button.dataset.rating)));
+      });
+      loadRating(post, box);
+    });
+  }
+
+  function translateStats() {
+    const en = document.documentElement.lang === "en";
+    const labels = document.querySelectorAll("[data-stat-label]");
+    labels.forEach(el => {
+      const type = el.dataset.statLabel;
+      el.textContent = en
+        ? ({today:"Today", month:"Month", year:"Year"}[type] || type)
+        : ({today:"Сегодня", month:"Месяц", year:"Год"}[type] || type);
+    });
+    document.querySelectorAll(".rating-box").forEach(box => {
+      const title = box.querySelector(".rating-title");
+      const status = box.querySelector(".rating-status");
+      if (title) title.textContent = en ? "Rate this post" : "Оценить пост";
+      renderRatingSummary(box);
+      if (status && !box.classList.contains("voted")) status.textContent = en ? "One vote per browser" : "Один голос с одного браузера";
+    });
+  }
+
+  ensureRatingWidgets();
+  translateStats();
+  updateVisitStats();
+
+  const postsRoot = document.getElementById("posts");
+  if (postsRoot) {
+    const observer = new MutationObserver(() => {
+      ensureRatingWidgets();
+      translateStats();
+    });
+    observer.observe(postsRoot, { childList: true, subtree: true });
+  }
+  window.addEventListener("languagechange", () => {
+    setTimeout(() => { ensureRatingWidgets(); translateStats(); }, 0);
+  });
 })();
 </script>
 </body>
