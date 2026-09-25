@@ -1246,9 +1246,12 @@
 
   let currentLanguage = localStorage.getItem("siteLanguage") === "en" ? "en" : "ru";
 
+  // Keep the original Russian markup in a JS property instead of a data-* attribute.
+  // Storing large post HTML (including embedded images) in data-* attributes can
+  // dramatically increase DOM memory usage on mobile browsers.
   posts.forEach(post => {
-    post.dataset.ruInner = post.innerHTML;
-    post.dataset.ruTopic = post.dataset.topic || "";
+    post.__mpRuInner = post.innerHTML;
+    post.__mpRuTopic = post.dataset.topic || "";
   });
 
   function applyLanguage(lang) {
@@ -1330,7 +1333,7 @@
           post.insertAdjacentHTML("beforeend", t.body);
         }
       } else {
-        post.innerHTML = post.dataset.ruInner;
+        post.innerHTML = post.__mpRuInner;
       }
     });
 
@@ -1350,6 +1353,9 @@
     localStorage.setItem("siteLanguage", lang);
     updatePostCounter();
     if (typeof window.applySearchPosts === "function") window.applySearchPosts();
+    // Re-create rating widgets only after the language switch has finished.
+    // This avoids a DOM observer watching the entire posts tree.
+    if (typeof window.refreshDynamicWidgets === "function") window.refreshDynamicWidgets();
   }
 
   function updateTopicBar() {
@@ -1367,10 +1373,6 @@
 
   applyLanguage(currentLanguage);
   updatePostCounter();
-  const postCounterObserver = new MutationObserver(updatePostCounter);
-  if (document.getElementById("posts")) {
-    postCounterObserver.observe(document.getElementById("posts"), {childList:true});
-  }
 })();
 </script>
 <footer class="site-footer">
@@ -1448,14 +1450,15 @@
     Authorization: `Bearer ${SUPABASE_KEY}`
   };
 
-  const postId = post => post.dataset.date || post.querySelector("h2")?.textContent.trim() || "unknown-post";
-  const localVisitKey = () => {
+  const postId = post => post.dataset.postDate || post.dataset.date || post.querySelector("h2")?.textContent.trim() || "unknown-post";
+
+  function localVisitKey() {
     const d = new Date();
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `mp_visit_${y}-${m}-${day}`;
-  };
+  }
 
   function localStart(type) {
     const now = new Date();
@@ -1470,7 +1473,6 @@
       visited_at: `gte.${start.toISOString()}`
     });
     const response = await fetch(`${REST}/site_visits?${params}`, {
-      method: "GET",
       headers: { ...headers, Prefer: "count=exact", Range: "0-0" },
       cache: "no-store"
     });
@@ -1489,7 +1491,7 @@
       const response = await fetch(`${REST}/site_visits`, {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({})
+        body: "{}"
       });
       if (response.ok) localStorage.setItem(key, "1");
     } catch (error) {
@@ -1505,9 +1507,8 @@
         countVisits(localStart("month")),
         countVisits(localStart("year"))
       ]);
-      const ids = ["visitsToday", "visitsMonth", "visitsYear"];
       [today, month, year].forEach((value, index) => {
-        const el = document.getElementById(ids[index]);
+        const el = document.getElementById(["visitsToday", "visitsMonth", "visitsYear"][index]);
         if (el) el.textContent = value.toLocaleString("ru-RU");
       });
     } catch (error) {
@@ -1519,7 +1520,8 @@
     const key = "mp_rating_visitor_id";
     let id = localStorage.getItem(key);
     if (!id) {
-      id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      if (window.crypto?.randomUUID) id = crypto.randomUUID();
+      else id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
       localStorage.setItem(key, id);
     }
     return id;
@@ -1529,7 +1531,7 @@
 
   async function loadRating(post, box) {
     const id = postId(post);
-    const params = new URLSearchParams({ select: "rating", post_id: `eq.${id}` });
+    const params = new URLSearchParams({ select: "rating,visitor_id", post_id: `eq.${id}` });
     try {
       const response = await fetch(`${REST}/post_ratings?${params}`, { headers, cache: "no-store" });
       if (!response.ok) throw new Error(`Rating HTTP ${response.status}`);
@@ -1539,14 +1541,26 @@
       box.dataset.ratingAverage = String(average);
       box.dataset.ratingCount = String(count);
       renderRatingSummary(box);
-      const voted = !!localStorage.getItem(ratingVotedKey(id));
+
+      const savedRating = localStorage.getItem(ratingVotedKey(id));
+      const currentVisitor = visitorId();
+      const ownRow = rows.find(row => row.visitor_id === currentVisitor);
+      const voted = !!ownRow;
+      if (!voted && savedRating !== null) localStorage.removeItem(ratingVotedKey(id));
+      if (voted) localStorage.setItem(ratingVotedKey(id), String(ownRow.rating));
+
       box.classList.toggle("voted", voted);
       box.querySelectorAll(".rating-star").forEach(button => {
+        const value = Number(button.getAttribute("data-rating"));
         button.disabled = voted;
-        button.classList.toggle("active", voted && Number(button.dataset.rating) === Number(localStorage.getItem(ratingVotedKey(id))));
+        button.classList.toggle("active", voted && value === Number(ownRow?.rating));
       });
+      const status = box.querySelector(".rating-status");
+      if (status && voted) status.textContent = document.documentElement.lang === "en" ? "You have already rated this post." : "Вы уже оценили этот пост.";
     } catch (error) {
-      console.warn("Post rating:", error);
+      console.warn("Post rating load:", error);
+      const status = box.querySelector(".rating-status");
+      if (status) status.textContent = document.documentElement.lang === "en" ? "Ratings are temporarily unavailable." : "Оценки временно недоступны.";
     }
   }
 
@@ -1554,26 +1568,41 @@
     const id = postId(post);
     const key = ratingVotedKey(id);
     if (localStorage.getItem(key)) return;
+
+    const selectedRating = Number(rating);
+    if (!Number.isInteger(selectedRating) || selectedRating < 1 || selectedRating > 5) return;
+
     const status = box.querySelector(".rating-status");
-    if (status) status.textContent = "Сохраняем оценку…";
+    const stars = [...box.querySelectorAll(".rating-star")];
+    stars.forEach(button => {
+      button.disabled = true;
+      button.classList.toggle("active", Number(button.getAttribute("data-rating")) === selectedRating);
+    });
+    if (status) status.textContent = document.documentElement.lang === "en" ? "Saving…" : "Сохраняем оценку…";
+
     try {
       const response = await fetch(`${REST}/post_ratings`, {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({ post_id: id, rating, visitor_id: visitorId() })
+        body: JSON.stringify({ post_id: id, rating: selectedRating, visitor_id: visitorId() })
       });
+
       if (response.status === 409) {
-        localStorage.setItem(key, String(rating));
-      } else if (!response.ok) {
-        throw new Error(`Rating HTTP ${response.status}`);
-      } else {
-        localStorage.setItem(key, String(rating));
+        await loadRating(post, box);
+        return;
       }
-      if (status) status.textContent = "Спасибо за оценку!";
+      if (!response.ok) throw new Error(`Rating HTTP ${response.status}`);
+
+      localStorage.setItem(key, String(selectedRating));
+      if (status) status.textContent = document.documentElement.lang === "en" ? "Thanks for rating!" : "Спасибо за оценку!";
       await loadRating(post, box);
     } catch (error) {
-      if (status) status.textContent = "Не удалось сохранить оценку. Попробуйте ещё раз.";
-      console.warn("Post rating:", error);
+      stars.forEach(button => {
+        button.disabled = false;
+        button.classList.remove("active");
+      });
+      if (status) status.textContent = document.documentElement.lang === "en" ? "Could not save the rating. Try again." : "Не удалось сохранить оценку. Попробуйте ещё раз.";
+      console.warn("Post rating submit:", error);
     }
   }
 
@@ -1587,11 +1616,8 @@
       summary.textContent = en ? "No ratings yet" : "Пока нет оценок";
       return;
     }
-    if (en) {
-      summary.textContent = `${average.toFixed(1)} / 5 · ${count} ${count === 1 ? "vote" : "votes"}`;
-    } else {
-      summary.textContent = `${average.toFixed(1).replace(".", ",")} / 5 · ${count} ${count === 1 ? "голос" : (count < 5 ? "голоса" : "голосов")}`;
-    }
+    if (en) summary.textContent = `${average.toFixed(1)} / 5 · ${count} ${count === 1 ? "vote" : "votes"}`;
+    else summary.textContent = `${average.toFixed(1).replace(".", ",")} / 5 · ${count} ${count === 1 ? "голос" : (count < 5 ? "голоса" : "голосов")}`;
   }
 
   function ratingText() {
@@ -1616,12 +1642,15 @@
           <div class="rating-summary">Загрузка…</div>
         </div>
         <div class="rating-stars" role="group" aria-label="${text.title}">
-          ${[1,2,3,4,5].map(n => `<button class="rating-star" type="button" data-rating="${n}" aria-label="${n} из 5">★</button>`).join("")}
+          ${[1,2,3,4,5].map(n => `<button class="rating-star" type="button" data-rating="${n}" aria-label="${n} / 5">★</button>`).join("")}
         </div>
         <div class="rating-status">${text.status}</div>`;
       date.before(box);
       box.querySelectorAll(".rating-star").forEach(button => {
-        button.addEventListener("click", () => submitRating(post, box, Number(button.dataset.rating)));
+        button.addEventListener("click", event => {
+          event.preventDefault();
+          submitRating(post, box, Number(button.dataset.rating));
+        });
       });
       loadRating(post, box);
     });
@@ -1629,12 +1658,9 @@
 
   function translateStats() {
     const en = document.documentElement.lang === "en";
-    const labels = document.querySelectorAll("[data-stat-label]");
-    labels.forEach(el => {
+    document.querySelectorAll("[data-stat-label]").forEach(el => {
       const type = el.dataset.statLabel;
-      el.textContent = en
-        ? ({today:"Today", month:"Month", year:"Year"}[type] || type)
-        : ({today:"Сегодня", month:"Месяц", year:"Год"}[type] || type);
+      el.textContent = en ? ({today:"Today", month:"Month", year:"Year"}[type] || type) : ({today:"Сегодня", month:"Месяц", year:"Год"}[type] || type);
     });
     document.querySelectorAll(".rating-box").forEach(box => {
       const title = box.querySelector(".rating-title");
@@ -1645,21 +1671,16 @@
     });
   }
 
+  window.refreshDynamicWidgets = function refreshDynamicWidgets() {
+    ensureRatingWidgets();
+    translateStats();
+  };
+
+  // No MutationObserver here. Sorting only moves existing articles, and language
+  // switching explicitly calls refreshDynamicWidgets after changing their markup.
   ensureRatingWidgets();
   translateStats();
   updateVisitStats();
-
-  const postsRoot = document.getElementById("posts");
-  if (postsRoot) {
-    const observer = new MutationObserver(() => {
-      ensureRatingWidgets();
-      translateStats();
-    });
-    observer.observe(postsRoot, { childList: true, subtree: true });
-  }
-  window.addEventListener("languagechange", () => {
-    setTimeout(() => { ensureRatingWidgets(); translateStats(); }, 0);
-  });
 })();
 </script>
 </body>
