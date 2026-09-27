@@ -754,6 +754,43 @@
       .rating-stars { width: 100%; justify-content: flex-start; }
     }
 
+
+/* Mobile refinements — stable version */
+@media (max-width: 560px) {
+  .search-mode {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    padding: 2px 2px 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .search-mode::-webkit-scrollbar { display: none; }
+  .search-mode button {
+    flex: 0 0 auto;
+    min-height: 40px;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+}
+@media (max-width: 380px) {
+  .header-inner { width: calc(100% - 20px); }
+  .brand-link { gap: 5px; }
+  .brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
+  .logo { font-size: 15px; letter-spacing: -0.35px; }
+}
+@media (max-width: 360px) {
+  .stat-card { padding: 15px; }
+  .stat-card-value { font-size: 24px; }
+}
+@media (max-width: 600px) {
+  .rating-star {
+    width: 40px; height: 40px; min-width: 40px;
+    touch-action: manipulation;
+  }
+}
 </style>
 </head>
 <body>
@@ -1432,6 +1469,14 @@
       mobileSettings.classList.remove('open');
       settingsToggle.setAttribute('aria-expanded','false');
       mobileSettings.setAttribute('aria-hidden','true');
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && mobileSettings.classList.contains('open')) {
+      mobileSettings.classList.remove('open');
+      settingsToggle.setAttribute('aria-expanded','false');
+      mobileSettings.setAttribute('aria-hidden','true');
+      settingsToggle.focus();
     }
   });
   if (mobileSort && sort) { mobileSort.value = sort.value; mobileSort.addEventListener('change', () => { sort.value = mobileSort.value; sort.dispatchEvent(new Event('change', {bubbles:true})); }); sort.addEventListener('change', () => mobileSort.value = sort.value); }
