@@ -1019,6 +1019,24 @@
     ↑
   </button>
 <script>
+(() => {
+  // Safe storage layer: some mobile/private browsers can throw on localStorage.
+  // Define it before any other script needs it.
+  const memory = new Map();
+  window.mpStorage = {
+    get(key) {
+      try { return window.localStorage.getItem(key); } catch (_) { return memory.has(key) ? memory.get(key) : null; }
+    },
+    set(key, value) {
+      try { window.localStorage.setItem(key, String(value)); } catch (_) { memory.set(key, String(value)); }
+    },
+    remove(key) {
+      try { window.localStorage.removeItem(key); } catch (_) { memory.delete(key); }
+    }
+  };
+})();
+</script>
+<script>
     (() => {
       const body = document.body;
       const themeToggle = document.getElementById("themeToggle");
@@ -1067,7 +1085,7 @@
         }
       }
 
-      const savedTheme = localStorage.getItem("theme");
+      const savedTheme = mpStorage.get("theme");
 
       if (
         savedTheme === "dark" ||
@@ -1085,7 +1103,7 @@
       themeToggle.addEventListener("click", () => {
         body.classList.toggle("dark");
 
-        localStorage.setItem(
+        mpStorage.set(
           "theme",
           body.classList.contains("dark") ? "dark" : "light"
         );
@@ -1129,13 +1147,13 @@
         postsContainer.appendChild(noResults);
       }
 
-      const savedSort = localStorage.getItem("postSortOrder");
+      const savedSort = mpStorage.get("postSortOrder");
       if (savedSort === "oldest" || savedSort === "newest") {
         sortOrder.value = savedSort;
       }
 
       sortOrder.addEventListener("change", () => {
-        localStorage.setItem("postSortOrder", sortOrder.value);
+        mpStorage.set("postSortOrder", sortOrder.value);
         sortPosts();
         applySearch();
       });
@@ -1281,7 +1299,7 @@
     postDate: "Written:"
   };
 
-  let currentLanguage = localStorage.getItem("siteLanguage") === "en" ? "en" : "ru";
+  let currentLanguage = mpStorage.get("siteLanguage") === "en" ? "en" : "ru";
 
   // Keep the original Russian markup in a JS property instead of a data-* attribute.
   // Storing large post HTML (including embedded images) in data-* attributes can
@@ -1387,7 +1405,7 @@
     languageToggle.setAttribute("aria-label", isEnglish ? ruUI.languageRU : ruUI.languageEN);
     languageToggle.title = isEnglish ? ruUI.languageRU : ruUI.languageEN;
 
-    localStorage.setItem("siteLanguage", lang);
+    mpStorage.set("siteLanguage", lang);
     updatePostCounter();
     if (typeof window.applySearchPosts === "function") window.applySearchPosts();
     // Re-create rating widgets only after the language switch has finished.
@@ -1436,7 +1454,7 @@
     en:{footerBrand:"Moldavskaya Proslushka",footerOfficialTitle:"Official social media & resources",footerSupportTitle:"Support resources",footerBoosty:"Support the project",footerNote:"Independent analytical project · 2026"}
   };
   function updateFooter(){
-    const lang=localStorage.getItem("language")||document.documentElement.lang||"ru";
+    const lang=mpStorage.get("language")||document.documentElement.lang||"ru";
     const d=footerText[lang]||footerText.ru;
     document.querySelectorAll("[data-footer-i18n]").forEach(el=>{
       const k=el.getAttribute("data-footer-i18n");
@@ -1531,14 +1549,14 @@
 
   async function registerVisit() {
     const key = localVisitKey();
-    if (localStorage.getItem(key)) return;
+    if (mpStorage.get(key)) return;
     try {
       const response = await fetch(`${REST}/site_visits`, {
         method: "POST",
         headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
         body: "{}"
       });
-      if (response.ok) localStorage.setItem(key, "1");
+      if (response.ok) mpStorage.set(key, "1");
     } catch (error) {
       console.warn("Global visit counter:", error);
     }
@@ -1563,11 +1581,11 @@
 
   function visitorId() {
     const key = "mp_rating_visitor_id";
-    let id = localStorage.getItem(key);
+    let id = mpStorage.get(key);
     if (!id) {
       if (window.crypto?.randomUUID) id = crypto.randomUUID();
       else id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-      localStorage.setItem(key, id);
+      mpStorage.set(key, id);
     }
     return id;
   }
@@ -1587,12 +1605,12 @@
       box.dataset.ratingCount = String(count);
       renderRatingSummary(box);
 
-      const savedRating = localStorage.getItem(ratingVotedKey(id));
+      const savedRating = mpStorage.get(ratingVotedKey(id));
       const currentVisitor = visitorId();
       const ownRow = rows.find(row => row.visitor_id === currentVisitor);
       const voted = !!ownRow;
-      if (!voted && savedRating !== null) localStorage.removeItem(ratingVotedKey(id));
-      if (voted) localStorage.setItem(ratingVotedKey(id), String(ownRow.rating));
+      if (!voted && savedRating !== null) mpStorage.remove(ratingVotedKey(id));
+      if (voted) mpStorage.set(ratingVotedKey(id), String(ownRow.rating));
 
       box.classList.toggle("voted", voted);
       box.querySelectorAll(".rating-star").forEach(button => {
@@ -1612,7 +1630,7 @@
   async function submitRating(post, box, rating) {
     const id = postId(post);
     const key = ratingVotedKey(id);
-    if (localStorage.getItem(key)) return;
+    if (mpStorage.get(key)) return;
 
     const selectedRating = Number(rating);
     if (!Number.isInteger(selectedRating) || selectedRating < 1 || selectedRating > 5) return;
@@ -1638,7 +1656,7 @@
       }
       if (!response.ok) throw new Error(`Rating HTTP ${response.status}`);
 
-      localStorage.setItem(key, String(selectedRating));
+      mpStorage.set(key, String(selectedRating));
       if (status) status.textContent = document.documentElement.lang === "en" ? "Thanks for rating!" : "Спасибо за оценку!";
       await loadRating(post, box);
     } catch (error) {
