@@ -121,6 +121,104 @@
       gap: 10px;
     }
 
+    .research-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+      transition: transform .2s ease, background-color .2s ease, border-color .2s ease, color .2s ease;
+    }
+
+    .research-link:hover,
+    .research-link.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .research-nav {
+      border-top: 1px solid var(--border);
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 8px 0 10px;
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .research-page {
+      display: none;
+      padding: 76px 0 90px;
+    }
+
+    .research-page.visible {
+      display: block;
+    }
+
+    body.research-view > main,
+    body.research-view > #topButton {
+      display: none;
+    }
+
+    .research-card {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 42px 34px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .research-icon {
+      font-size: 46px;
+      line-height: 1;
+      margin-bottom: 18px;
+    }
+
+    .research-card h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.1;
+      letter-spacing: -1.2px;
+    }
+
+    .research-card p {
+      margin: 0 auto 26px;
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .research-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+      transition: transform .2s ease, background-color .2s ease;
+    }
+
+    .research-back:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
     .header-sort {
       height: 46px;
       min-width: 154px;
@@ -579,6 +677,16 @@
       .settings-button { display:inline-flex; align-items:center; justify-content:center; flex:0 0 42px; }
       .mobile-settings { position:absolute; top:calc(100% + 8px); right:16px; width:min(320px, calc(100vw - 32px)); padding:16px; border:1px solid var(--border); border-radius:18px; background:var(--card); box-shadow:var(--shadow); color:var(--text); }
       .mobile-settings.open { display:block; }
+      .research-nav {
+        width: calc(100% - 24px);
+        padding: 7px 0 9px;
+      }
+      .research-nav .research-link {
+        width: 100%;
+        min-height: 42px;
+        font-size: 13px;
+        border-radius: 12px;
+      }
       .mobile-settings-title { font-size:17px; font-weight:800; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border); }
       .mobile-setting-row {
         min-height:50px;
@@ -626,6 +734,19 @@
 
       .hero {
         padding: 55px 0 35px;
+      }
+
+      .research-page {
+        padding: 44px 0 60px;
+      }
+
+      .research-card {
+        padding: 30px 20px;
+        border-radius: 18px;
+      }
+
+      .research-card p {
+        font-size: 15px;
       }
 
       .hero h1 {
@@ -801,6 +922,9 @@
 <div class="mobile-setting-row"><span id="mobileLanguageLabel">🌐 Язык</span><button aria-label="Switch to English" class="theme-button language-button" id="mobileLanguageToggle" type="button">EN</button></div>
 </div>
 </div>
+<nav class="research-nav" aria-label="Навигация по сайту">
+<a aria-label="Исследования" class="research-link" data-nav-i18n="research" href="#research">🔬 Исследования</a>
+</nav>
 </header>
 <main id="top">
 <section class="hero">
@@ -998,6 +1122,16 @@
       </div>
 </section>
 </main>
+<section aria-labelledby="researchPageTitle" class="research-page" id="researchPage">
+  <div class="container">
+    <div class="research-card">
+      <div aria-hidden="true" class="research-icon">🔬</div>
+      <h1 id="researchPageTitle">Исследования</h1>
+      <p id="researchPageDescription">Здесь будет отдельная страница с проведёнными мной исследованиями. Я добавлю их сюда позже.</p>
+      <a class="research-back" href="./" id="researchBack">← Вернуться к постам</a>
+    </div>
+  </div>
+</section>
 <button aria-label="Прокрутить наверх" class="top-button" id="topButton" title="Наверх" type="button">
     ↑
   </button>
@@ -1225,6 +1359,11 @@
   const postCounter = document.getElementById("postCounter");
   const noResults = document.getElementById("noResults");
   const footer = document.querySelector(".footer .container");
+  const researchPage = document.getElementById("researchPage");
+  const researchPageTitle = document.getElementById("researchPageTitle");
+  const researchPageDescription = document.getElementById("researchPageDescription");
+  const researchBack = document.getElementById("researchBack");
+  const researchLinks = Array.from(document.querySelectorAll('[data-nav-i18n="research"]'));
 
   const ruUI = {
     heroBadge: "✦ Образовательный проект",
@@ -1247,7 +1386,11 @@
     sortLabel: "↕️ Сортировка",
     themeLabel: "🌙 Тема",
     languageLabel: "🌐 Язык",
-    postDate: "Дата написания:"
+    postDate: "Дата написания:",
+    research: "🔬 Исследования",
+    researchTitle: "Исследования",
+    researchDescription: "Здесь будет отдельная страница с проведёнными мной исследованиями. Я добавлю их сюда позже.",
+    researchBack: "← Вернуться к постам"
   };
 
   function updatePostCounter() {
@@ -1279,7 +1422,11 @@
     sortLabel: "↕️ Sort",
     themeLabel: "🌙 Theme",
     languageLabel: "🌐 Language",
-    postDate: "Written:"
+    postDate: "Written:",
+    research: "🔬 Research",
+    researchTitle: "Research",
+    researchDescription: "This page will contain the research I have conducted. I will add it here later.",
+    researchBack: "← Back to posts"
   };
 
   let currentLanguage = mpStorage.get("siteLanguage") === "en" ? "en" : "ru";
@@ -1291,6 +1438,19 @@
     post.__mpRuInner = post.innerHTML;
     post.__mpRuTopic = post.dataset.topic || "";
   });
+
+  function updateResearchRoute() {
+    const isResearch = window.location.hash === "#research";
+    document.body.classList.toggle("research-view", isResearch);
+    if (researchPage) researchPage.classList.toggle("visible", isResearch);
+    researchLinks.forEach(link => link.classList.toggle("active", isResearch));
+
+    if (isResearch) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  window.addEventListener("hashchange", updateResearchRoute);
 
   function applyLanguage(lang) {
     currentLanguage = lang;
@@ -1338,6 +1498,14 @@
     if (topicLabel && topicLabel.firstChild) {
       topicLabel.firstChild.nodeValue = isEnglish ? "Topic: " : "Тема: ";
     }
+
+    researchLinks.forEach(link => {
+      link.textContent = isEnglish ? enUI.research : ruUI.research;
+      link.setAttribute("aria-label", isEnglish ? "Research" : "Исследования");
+    });
+    if (researchPageTitle) researchPageTitle.textContent = isEnglish ? enUI.researchTitle : ruUI.researchTitle;
+    if (researchPageDescription) researchPageDescription.textContent = isEnglish ? enUI.researchDescription : ruUI.researchDescription;
+    if (researchBack) researchBack.textContent = isEnglish ? enUI.researchBack : ruUI.researchBack;
 
     const backHome = document.querySelector(".back-home");
     if (backHome) backHome.textContent = isEnglish ? enUI.allPosts : ruUI.allPosts;
@@ -1411,6 +1579,7 @@
 
   applyLanguage(currentLanguage);
   updatePostCounter();
+  updateResearchRoute();
 })();
 </script>
 <footer class="site-footer">
