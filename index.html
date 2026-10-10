@@ -1826,7 +1826,9 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
   };
 
   // Never let a slow mobile network keep the UI in a permanent loading state.
-  async function fetchWithTimeout(url, options = {}, timeoutMs = 9000) {
+  // Also: remember the last HTTP error (for on-page diagnostics) and, for new-style
+  // sb_publishable keys, retry once without the Authorization header if the API rejects it.
+  async function fetchOnce(url, options, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -1834,6 +1836,26 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 9000) {
+    let response = await fetchOnce(url, options, timeoutMs);
+    const h = options.headers || {};
+    if ((response.status === 401 || response.status === 403) && h.Authorization && String(h.apikey || "").startsWith("sb_")) {
+      const { Authorization, ...rest } = h;
+      try {
+        const retry = await fetchOnce(url, { ...options, headers: rest }, timeoutMs);
+        if (retry.ok) response = retry;
+      } catch (_) { /* keep the original response */ }
+    }
+    if (response.ok) {
+      window.__mpLastHttp = "";
+    } else {
+      let body = "";
+      try { body = (await response.clone().text()).slice(0, 140); } catch (_) {}
+      window.__mpLastHttp = `HTTP ${response.status}${body ? " " + body : ""}`;
+    }
+    return response;
   }
 
   const postId = post => post.dataset.postDate || post.dataset.date || post.querySelector("h2")?.textContent.trim() || "unknown-post";
@@ -1994,7 +2016,10 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
       box.dataset.ratingLoaded = "0";
       box.querySelectorAll(".rating-star").forEach(button => { button.disabled = false; });
       const status = box.querySelector(".rating-status");
-      if (status) status.textContent = getRatingText().unavailable;
+      if (status) {
+        const why = window.__mpLastHttp || (error && (error.name === "AbortError" ? "timeout" : error.message)) || "";
+        status.textContent = getRatingText().unavailable + (why ? ` (${why})` : "");
+      }
       return false;
     }
   }
