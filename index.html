@@ -6,6 +6,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta content="Молдавская прослушка — образовательный проект и сборник аналитических постов." name="description"/>
 <title>Молдавская прослушка</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
     :root {
       --bg: #f0f2f5;
@@ -947,7 +948,41 @@
     touch-action: manipulation;
   }
 }
-</style>
+
+    /* ===== Звёздочка поддержки + окно доната ===== */
+    .mp-star{position:fixed;z-index:2000;top:50%;left:0;width:44px;height:44px;padding:0;border:0;border-radius:50%;
+      background:radial-gradient(circle at 30% 25%,#ffe27a,#f5b301 70%);box-shadow:0 4px 14px rgba(0,0,0,.28);
+      display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      transition:left .28s ease,top .28s ease,transform .35s ease,opacity .35s ease}
+    .mp-star[hidden]{display:none}
+    .mp-star.drag{transition:none;cursor:grabbing;transform:scale(1.08)}
+    .mp-star.asleep{opacity:.45;transform:translateX(50%)}
+    .mp-star.asleep.left{transform:translateX(-50%)}
+    .mp-star svg{width:26px;height:26px;pointer-events:none}
+    .mp-pop{position:fixed;z-index:2001;width:min(270px,calc(100vw - 24px));padding:16px;border:1px solid var(--border);border-radius:16px;
+      background:var(--card);color:var(--text);box-shadow:var(--shadow);text-align:center}
+    .mp-pop[hidden]{display:none}
+    .mp-pop svg.big{width:48px;height:48px;margin:0 auto 6px;display:block}
+    .mp-pop p{margin:0 0 12px;font-size:15px;line-height:1.4;font-weight:700}
+    .mp-btn{display:block;width:100%;min-height:42px;padding:0 14px;border:0;border-radius:12px;background:var(--accent);color:#fff;
+      font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+    .mp-btn:hover{background:var(--accent-hover)}
+    .mp-btn:disabled{opacity:.6;cursor:default}
+    .mp-link{display:inline-block;margin-top:10px;padding:4px;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer}
+    .mp-overlay{position:fixed;inset:0;z-index:2100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55)}
+    .mp-overlay[hidden]{display:none}
+    .mp-card{position:relative;width:min(360px,100%);padding:22px 18px 18px;border:1px solid var(--border);border-radius:18px;background:var(--card);color:var(--text);box-shadow:var(--shadow);text-align:center}
+    .mp-card h3{margin:0 0 4px;font-size:18px}
+    .mp-card .sub{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.4}
+    .mp-x{position:absolute;top:8px;right:10px;width:32px;height:32px;border:0;background:none;color:var(--muted);font-size:24px;line-height:1;cursor:pointer}
+    .mp-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+    .mp-quick button{min-height:40px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+    .mp-quick button.on{border-color:#f5b301;background:rgba(245,179,1,.18)}
+    .mp-custom{width:100%;min-height:42px;margin-bottom:12px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;font-size:15px;text-align:center}
+    .mp-status{min-height:18px;margin:10px 0 0;font-size:13px;color:var(--muted)}
+    .mp-status.err{color:#d93025}.mp-status.ok{color:#188038}
+  </style>
 </head>
 <body>
 <header class="site-header">
@@ -1821,6 +1856,7 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
 <div class="footer-section-title" data-footer-i18n="footerSupportTitle">Ресурсы поддержки</div>
 <div class="footer-links">
 <a class="footer-link support" data-footer-i18n="footerBoosty" href="https://boosty.to/danonchikbyrger" rel="noopener noreferrer" target="_blank">Поддержать проект монетой</a>
+<a class="footer-link support" data-footer-i18n="footerStars" href="#" id="mpStarSupport" role="button">Поддержать звёздами ⭐</a>
 </div>
 <p class="footer-note" data-footer-i18n="footerNote">Авторский аналитический проект · 2026</p>
 </div>
@@ -1828,8 +1864,8 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
 <script>
 (() => {
   const footerText = {
-    ru:{footerBrand:"Молдавская прослушка",footerOfficialTitle:"Официальные соцсети и ресурсы",footerSupportTitle:"Ресурсы поддержки",footerBoosty:"Поддержать проект монетой",footerNote:"Авторский аналитический проект · 2026"},
-    en:{footerBrand:"Moldavskaya Proslushka",footerOfficialTitle:"Official social media & resources",footerSupportTitle:"Support resources",footerBoosty:"Support the project",footerNote:"Independent analytical project · 2026"}
+    ru:{footerBrand:"Молдавская прослушка",footerOfficialTitle:"Официальные соцсети и ресурсы",footerSupportTitle:"Ресурсы поддержки",footerBoosty:"Поддержать проект монетой",footerStars:"Поддержать звёздами ⭐",footerNote:"Авторский аналитический проект · 2026"},
+    en:{footerBrand:"Moldavskaya Proslushka",footerOfficialTitle:"Official social media & resources",footerSupportTitle:"Support resources",footerBoosty:"Support the project",footerStars:"Support with Stars ⭐",footerNote:"Independent analytical project · 2026"}
   };
   function updateFooter(){
     const lang=mpStorage.get("language")||document.documentElement.lang||"ru";
@@ -2298,6 +2334,231 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
   const prev = window.refreshDynamicWidgets;
   window.refreshDynamicWidgets = function () { if (typeof prev === "function") prev.apply(this, arguments); renderAll(); };
   renderAll();
+})();
+</script>
+
+<!-- ===== Звёздочка поддержки: кнопка, окошко и окно доната ===== -->
+<button class="mp-star" id="mpStar" type="button" aria-label="Поддержать звёздами" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>
+</button>
+<div class="mp-pop" id="mpPop" hidden>
+  <svg class="big" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="mpG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#f5a000"/></linearGradient></defs><path fill="url(#mpG)" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>
+  <p data-k="popText"></p>
+  <button class="mp-btn" id="mpPopGo" type="button" data-k="popBtn"></button>
+  <button class="mp-link" id="mpPopHide" type="button" data-k="popHide"></button>
+</div>
+<div class="mp-overlay" id="mpDonate" hidden>
+  <div class="mp-card" role="dialog" aria-modal="true">
+    <button class="mp-x" id="mpClose" type="button" aria-label="Закрыть">×</button>
+    <h3 data-k="title"></h3>
+    <p class="sub" id="mpSub"></p>
+    <div class="mp-quick" id="mpQuick"></div>
+    <input class="mp-custom" id="mpCustom" type="number" inputmode="numeric" min="1" max="10000" step="1">
+    <button class="mp-btn" id="mpPay" type="button"></button>
+    <p class="mp-status" id="mpStatus"></p>
+  </div>
+</div>
+
+<script>
+/* ===== Звёздочка поддержки (Telegram Stars) ===== */
+(() => {
+  /* ---------- НАСТРОЙКИ: впишите свои значения ---------- */
+  const CFG = {
+    BOT: "moldavskayproslyshka_bot",        // username бота без @, например moldavskaya_bot
+    APP: "k3Jd9xQ2mLp7Zt41",      // короткое имя Mini App из @BotFather (/newapp)
+    FN:  "https://bjyfhovdoxhxfsmspsia.supabase.co/functions/v1/create-invoice",
+    MIN: 1, MAX: 10000,
+    AMOUNTS: [10, 50, 100, 500]
+  };
+  /* ------------------------------------------------------- */
+
+  const T = {
+    ru: {
+      popText: "Теперь можно поддерживать сайт звёздами!", popBtn: "Поддержать", popHide: "скрыть звёздочку",
+      title: "Поддержать сайт звёздами", subTg: "Выберите сумму в Telegram Stars", subWeb: "Оплата звёздами проходит в Telegram — откроем Mini App.",
+      custom: "Своя сумма", payTg: n => `Поддержать на ${n} ⭐`, payWeb: n => `Продолжить в Telegram · ${n} ⭐`,
+      bad: `Введите сумму от ${CFG.MIN} до ${CFG.MAX} звёзд`, creating: "Создаём счёт…", thanks: "Спасибо за поддержку сайта! ⭐",
+      failed: "Платёж не прошёл. Попробуйте ещё раз.", error: "Не удалось создать счёт. Попробуйте позже.", close: "Закрыть"
+    },
+    en: {
+      popText: "You can now support the site with Stars!", popBtn: "Support", popHide: "hide the star",
+      title: "Support the site with Stars", subTg: "Choose an amount in Telegram Stars", subWeb: "Stars payments happen in Telegram — we'll open the Mini App.",
+      custom: "Custom amount", payTg: n => `Support with ${n} ⭐`, payWeb: n => `Continue in Telegram · ${n} ⭐`,
+      bad: `Enter an amount from ${CFG.MIN} to ${CFG.MAX} Stars`, creating: "Creating invoice…", thanks: "Thank you for supporting the site! ⭐",
+      failed: "Payment failed. Please try again.", error: "Could not create the invoice. Try again later.", close: "Close"
+    }
+  };
+  const L = () => T[document.documentElement.lang === "en" ? "en" : "ru"];
+
+  const mem = {};
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (_) { return k in mem ? mem[k] : null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (_) { mem[k] = String(v); } }
+  };
+
+  const $ = id => document.getElementById(id);
+  const star = $("mpStar"), pop = $("mpPop"), overlay = $("mpDonate");
+  const quick = $("mpQuick"), custom = $("mpCustom"), payBtn = $("mpPay"), status = $("mpStatus");
+  if (!star || !pop || !overlay) return;
+
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const inTG = () => !!(tg && tg.initData);
+  if (inTG()) { try { tg.ready(); tg.expand(); } catch (_) {} }
+
+  /* ---------- Окно доната ---------- */
+  function texts() {
+    const t = L();
+    document.querySelectorAll("#mpPop [data-k],#mpDonate [data-k]").forEach(el => { el.textContent = t[el.dataset.k] || ""; });
+    $("mpSub").textContent = inTG() ? t.subTg : t.subWeb;
+    custom.placeholder = t.custom;
+    $("mpClose").setAttribute("aria-label", t.close);
+  }
+  function currentAmount() {
+    const n = Number(custom.value);
+    return Number.isInteger(n) && n >= CFG.MIN && n <= CFG.MAX ? n : null;
+  }
+  function refresh() {
+    const n = currentAmount(), t = L();
+    quick.querySelectorAll("button").forEach(b => b.classList.toggle("on", Number(b.dataset.v) === n));
+    const shown = n || "…";
+    payBtn.textContent = inTG() ? t.payTg(shown) : t.payWeb(shown);
+  }
+  function setStatus(msg, cls) { status.textContent = msg || ""; status.className = "mp-status" + (cls ? " " + cls : ""); }
+  function buildQuick() {
+    quick.innerHTML = "";
+    CFG.AMOUNTS.forEach(v => {
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.v = v; b.textContent = v + " ⭐";
+      b.addEventListener("click", () => { custom.value = v; setStatus(""); refresh(); });
+      quick.appendChild(b);
+    });
+  }
+  function openDonate(prefill) {
+    closePop(); texts();
+    custom.value = prefill && prefill >= CFG.MIN && prefill <= CFG.MAX ? prefill : CFG.AMOUNTS[1];
+    setStatus(""); refresh(); overlay.hidden = false;
+  }
+  function closeDonate() { overlay.hidden = true; }
+
+  async function pay() {
+    const n = currentAmount(), t = L();
+    if (!n) { setStatus(t.bad, "err"); return; }
+    if (!inTG()) {
+      window.open(`https://t.me/${CFG.BOT}/${CFG.APP}?startapp=donate_${n}`, "_blank", "noopener");
+      return;
+    }
+    payBtn.disabled = true; setStatus(t.creating);
+    try {
+      const r = await fetch(CFG.FN, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: n, initData: tg.initData })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.link) throw new Error(j.error || "http " + r.status);
+      setStatus("");
+      tg.openInvoice(j.link, st => {
+        if (st === "paid") { setStatus(t.thanks, "ok"); }
+        else if (st === "failed") { setStatus(t.failed, "err"); }
+        else { setStatus(""); }
+      });
+    } catch (e) {
+      console.error("create-invoice:", e);
+      setStatus(t.error, "err");
+    } finally { payBtn.disabled = false; }
+  }
+
+  custom.addEventListener("input", () => { setStatus(""); refresh(); });
+  payBtn.addEventListener("click", pay);
+  $("mpClose").addEventListener("click", closeDonate);
+  overlay.addEventListener("pointerdown", e => { if (e.target === overlay) closeDonate(); });
+  $("mpPopGo").addEventListener("click", () => openDonate());
+  const footerBtn = $("mpStarSupport");
+  if (footerBtn) footerBtn.addEventListener("click", e => { e.preventDefault(); openDonate(); });
+
+  /* ---------- Звёздочка ---------- */
+  const S = 44, M = 8;
+  let side = "right", yFrac = 0.6;
+  let sleepTimer = null, down = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+
+  try {
+    const saved = JSON.parse(store.get("mpStarPos") || "null");
+    if (saved && (saved.side === "left" || saved.side === "right") && typeof saved.y === "number") { side = saved.side; yFrac = Math.min(Math.max(saved.y, 0), 1); }
+  } catch (_) {}
+
+  const vw = () => document.documentElement.clientWidth;
+  const vh = () => window.innerHeight;
+  const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+
+  function place() {
+    star.style.top = clamp(yFrac * vh() - S / 2, M, vh() - S - M) + "px";
+    star.style.left = (side === "left" ? 0 : vw() - S) + "px";
+    star.classList.toggle("left", side === "left");
+  }
+  function wake() { clearTimeout(sleepTimer); star.classList.remove("asleep"); }
+  function sleepSoon() {
+    clearTimeout(sleepTimer);
+    sleepTimer = setTimeout(() => { if (!down && pop.hidden) star.classList.add("asleep"); }, 2500);
+  }
+  function openPop() {
+    texts(); pop.hidden = false;
+    const r = star.getBoundingClientRect(), h = pop.offsetHeight, w = pop.offsetWidth;
+    let top = r.bottom + 10;
+    if (top + h > vh() - M) top = Math.max(M, r.top - h - 10);
+    pop.style.top = top + "px";
+    pop.style.left = clamp(side === "left" ? 12 : vw() - w - 12, 8, vw() - w - 8) + "px";
+  }
+  function closePop() { if (!pop.hidden) { pop.hidden = true; sleepSoon(); } }
+
+  star.addEventListener("pointerdown", e => {
+    down = true; moved = false; wake();
+    const r = star.getBoundingClientRect();
+    sx = e.clientX; sy = e.clientY; ox = e.clientX - r.left; oy = e.clientY - r.top;
+    try { star.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  star.addEventListener("pointermove", e => {
+    if (!down) return;
+    if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > 6) { moved = true; closePop(); star.classList.add("drag"); }
+    if (moved) {
+      star.style.left = clamp(e.clientX - ox, 0, vw() - S) + "px";
+      star.style.top = clamp(e.clientY - oy, 0, vh() - S) + "px";
+    }
+  });
+  function end(e, cancelled) {
+    if (!down) return;
+    down = false; star.classList.remove("drag");
+    if (moved) {
+      const r = star.getBoundingClientRect();
+      side = r.left + S / 2 < vw() / 2 ? "left" : "right";
+      yFrac = (r.top + S / 2) / vh();
+      store.set("mpStarPos", JSON.stringify({ side, y: yFrac }));
+      place();
+    } else if (!cancelled) {
+      if (pop.hidden) openPop(); else closePop();
+    }
+    sleepSoon();
+  }
+  star.addEventListener("pointerup", e => end(e, false));
+  star.addEventListener("pointercancel", e => end(e, true));
+  star.addEventListener("mouseenter", wake);
+  star.addEventListener("mouseleave", sleepSoon);
+  star.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); wake(); pop.hidden ? openPop() : closePop(); } });
+
+  document.addEventListener("pointerdown", e => { if (!pop.hidden && !pop.contains(e.target) && !star.contains(e.target)) closePop(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { closeDonate(); closePop(); } });
+  window.addEventListener("resize", () => { place(); if (!pop.hidden) openPop(); });
+
+  $("mpPopHide").addEventListener("click", () => { store.set("mpStarHidden", "1"); pop.hidden = true; star.hidden = true; });
+
+  /* ---------- Запуск ---------- */
+  buildQuick(); texts();
+  if (store.get("mpStarHidden") !== "1") { star.hidden = false; place(); sleepSoon(); }
+
+  // Если Mini App открыт по ссылке с сайта (?startapp=donate_50) — сразу показать окно доната
+  try {
+    const sp = inTG() && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
+    const m = sp && /^donate(?:_(\d+))?$/.exec(sp);
+    if (m) openDonate(m[1] ? Number(m[1]) : undefined);
+  } catch (_) {}
 })();
 </script>
 </body>
