@@ -167,9 +167,24 @@
 
     body.research-view .hero,
     body.research-view .search-section,
-    body.research-view .post:not([data-topic="Исследования"]) {
+    body.research-view .post:not([data-topic="Исследования"]),
+    body.tests-view .hero,
+    body.tests-view .search-section,
+    body.tests-view #posts,
+    body.tests-view #researchPage {
       display: none !important;
     }
+
+    .tests-page { display: none; padding: 40px 0 80px; }
+    .tests-page.visible { display: block; }
+    body.tests-view .tests-page { display: block; }
+    .tests-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 1000px; margin: 28px auto 0; }
+    .test-card { display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 26px; border: 1px solid var(--border); border-radius: 18px; background: var(--card); box-shadow: var(--shadow); }
+    .test-card h2 { margin: 10px 0 8px; font-size: 22px; }
+    .test-card p { margin: 0 0 18px; color: var(--muted); font-size: 15px; }
+    .test-card .test-meta { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+    .test-open { margin-top: auto; display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 18px; border-radius: 12px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; }
+    @media (max-width: 640px) { .tests-grid { grid-template-columns: 1fr; } .test-card { padding: 22px; } }
 
     body.research-view .research-page {
       padding: 40px 0 10px;
@@ -735,8 +750,11 @@
         padding: 7px 0 9px;
       }
       .research-nav .research-link {
-        width: 100%;
+        width: auto;
+        min-width: 0;
+        flex: 1 1 0;
         min-height: 42px;
+        padding: 0 8px;
         font-size: 13px;
         border-radius: 12px;
       }
@@ -1011,7 +1029,7 @@
 </div>
 <nav class="research-nav" aria-label="Навигация по сайту">
 <a aria-label="Исследования" class="research-link" data-nav-i18n="research" href="#research">🔬 Исследования</a>
-<a aria-label="Играть в «Факт или заблуждение?»" class="research-link" href="./quiz.html">🧠 Факт или заблуждение?</a>
+<a aria-label="Все тесты" class="research-link" data-nav-i18n="tests" href="#tests">🧩 Тесты</a>
 </nav>
 </header>
 <section aria-labelledby="researchPageTitle" class="research-page" id="researchPage">
@@ -1021,6 +1039,31 @@
       <h1 id="researchPageTitle">Исследования</h1>
       <p id="researchPageDescription">Здесь собраны проведённые мной исследования.</p>
       <a class="research-back" href="./" id="researchBack">← Вернуться к постам</a>
+    </div>
+  </div>
+</section>
+<section aria-labelledby="testsPageTitle" class="tests-page" id="testsPage">
+  <div class="container">
+    <div class="research-card">
+      <div aria-hidden="true" class="research-icon">🧩</div>
+      <h1 id="testsPageTitle">Тесты</h1>
+      <p id="testsPageDescription">Выбери тест: каждый помогает разобраться в теме по-своему. Результаты предназначены для самоанализа и не заменяют профессиональную оценку.</p>
+    </div>
+    <div class="tests-grid">
+      <article class="test-card">
+        <div class="research-icon" aria-hidden="true">🔎</div>
+        <h2 id="factTestTitle">Факт или заблуждение?</h2>
+        <p id="factTestDescription">Проверь, насколько хорошо ты отличаешь достоверные утверждения от распространённых мифов и заблуждений. После прохождения увидишь свой результат.</p>
+        <div class="test-meta" id="factTestMeta">300 утверждений в базе · выбирай длину игры от 10 до 300 вопросов</div>
+        <a class="test-open" href="./quiz.html" id="factTestButton">Пройти тест →</a>
+      </article>
+      <article class="test-card">
+        <div class="research-icon" aria-hidden="true">🧠</div>
+        <h2 id="personalityTestTitle">Тип личности: 16 вариантов</h2>
+        <p id="personalityTestDescription">Ответь на 60 вопросов о своих привычках, предпочтениях и способах принимать решения. Получи один из 16 описательных профилей, а при подключённом ИИ — подробный разбор твоих ответов.</p>
+        <div class="test-meta" id="personalityTestMeta">60 вопросов · примерно 7–10 минут · ИИ-отчёт необязателен</div>
+        <a class="test-open" href="./personality.html" id="personalityTestButton">Определить тип →</a>
+      </article>
     </div>
   </div>
 </section>
@@ -1625,7 +1668,11 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
   const researchPageTitle = document.getElementById("researchPageTitle");
   const researchPageDescription = document.getElementById("researchPageDescription");
   const researchBack = document.getElementById("researchBack");
+  const testsPage = document.getElementById("testsPage");
+  const testsPageTitle = document.getElementById("testsPageTitle");
+  const testsPageDescription = document.getElementById("testsPageDescription");
   const researchLinks = Array.from(document.querySelectorAll('[data-nav-i18n="research"]'));
+  const testsLinks = Array.from(document.querySelectorAll('[data-nav-i18n="tests"]'));
 
   const ruUI = {
     heroBadge: "✦ Образовательный проект",
@@ -1652,7 +1699,18 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
     research: "🔬 Исследования",
     researchTitle: "Исследования",
     researchDescription: "Здесь собраны проведённые мной исследования.",
-    researchBack: "← Вернуться к постам"
+    researchBack: "← Вернуться к постам",
+    tests: "🧩 Тесты",
+    testsTitle: "Тесты",
+    testsDescription: "Выбери тест: каждый помогает разобраться в теме по-своему. Результаты предназначены для самоанализа и не заменяют профессиональную оценку.",
+    factTestTitle: "Факт или заблуждение?",
+    factTestDescription: "Проверь, насколько хорошо ты отличаешь достоверные утверждения от распространённых мифов и заблуждений. После прохождения увидишь свой результат.",
+    factTestMeta: "300 утверждений в базе · выбирай длину игры от 10 до 300 вопросов",
+    factTestButton: "Пройти тест →",
+    personalityTestTitle: "Тип личности: 16 вариантов",
+    personalityTestDescription: "Ответь на 60 вопросов о своих привычках, предпочтениях и способах принимать решения. Получи один из 16 описательных профилей, а при подключённом ИИ — подробный разбор твоих ответов.",
+    personalityTestMeta: "60 вопросов · примерно 7–10 минут · ИИ-отчёт необязателен",
+    personalityTestButton: "Определить тип →"
   };
 
   function updatePostCounter() {
@@ -1688,7 +1746,18 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
     research: "🔬 Research",
     researchTitle: "Research",
     researchDescription: "The research I have conducted is collected here.",
-    researchBack: "← Back to posts"
+    researchBack: "← Back to posts",
+    tests: "🧩 Tests",
+    testsTitle: "Tests",
+    testsDescription: "Choose a test: each explores a topic in its own way. Results are for self-reflection and do not replace professional assessment.",
+    factTestTitle: "Fact or misconception?",
+    factTestDescription: "See how well you distinguish reliable statements from common myths and misconceptions. You’ll see your score when you finish.",
+    factTestMeta: "300 statements in the bank · choose 10–300 questions",
+    factTestButton: "Take the test →",
+    personalityTestTitle: "Personality type: 16 profiles",
+    personalityTestDescription: "Answer 60 questions about your habits, preferences, and decision-making. Get one of 16 descriptive profiles, plus a detailed AI analysis of your answers if AI is connected.",
+    personalityTestMeta: "60 questions · about 7–10 minutes · AI report is optional",
+    personalityTestButton: "Find my type →"
   };
 
   let currentLanguage = mpStorage.get("siteLanguage") === "en" ? "en" : "ru";
@@ -1703,11 +1772,15 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
 
   function updateResearchRoute() {
     const isResearch = window.location.hash === "#research";
+    const isTests = window.location.hash === "#tests";
     document.body.classList.toggle("research-view", isResearch);
+    document.body.classList.toggle("tests-view", isTests);
     if (researchPage) researchPage.classList.toggle("visible", isResearch);
+    if (testsPage) testsPage.classList.toggle("visible", isTests);
     researchLinks.forEach(link => link.classList.toggle("active", isResearch));
+    testsLinks.forEach(link => link.classList.toggle("active", isTests));
 
-    if (isResearch) {
+    if (isResearch || isTests) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
@@ -1765,9 +1838,24 @@ An analysis of the Mellstroy phenomenon and the dynamics of public opinion shows
       link.textContent = isEnglish ? enUI.research : ruUI.research;
       link.setAttribute("aria-label", isEnglish ? "Research" : "Исследования");
     });
+    testsLinks.forEach(link => {
+      link.textContent = isEnglish ? enUI.tests : ruUI.tests;
+      link.setAttribute("aria-label", isEnglish ? "Tests" : "Все тесты");
+    });
     if (researchPageTitle) researchPageTitle.textContent = isEnglish ? enUI.researchTitle : ruUI.researchTitle;
     if (researchPageDescription) researchPageDescription.textContent = isEnglish ? enUI.researchDescription : ruUI.researchDescription;
     if (researchBack) researchBack.textContent = isEnglish ? enUI.researchBack : ruUI.researchBack;
+    const setText = (id, key) => { const el = document.getElementById(id); if (el) el.textContent = isEnglish ? enUI[key] : ruUI[key]; };
+    setText("testsPageTitle", "testsTitle");
+    setText("testsPageDescription", "testsDescription");
+    setText("factTestTitle", "factTestTitle");
+    setText("factTestDescription", "factTestDescription");
+    setText("factTestMeta", "factTestMeta");
+    setText("factTestButton", "factTestButton");
+    setText("personalityTestTitle", "personalityTestTitle");
+    setText("personalityTestDescription", "personalityTestDescription");
+    setText("personalityTestMeta", "personalityTestMeta");
+    setText("personalityTestButton", "personalityTestButton");
 
     const backHome = document.querySelector(".back-home");
     if (backHome) backHome.textContent = isEnglish ? enUI.allPosts : ruUI.allPosts;
