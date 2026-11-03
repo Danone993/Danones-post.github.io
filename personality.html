@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Опросник на 16 типов личности с подробным персональным ИИ-разбором. Не является психологической диагностикой.">
+<meta name="description" content="Опросник личности из 60 вопросов. Подробный персональный разбор готовится отдельно и отправляется на электронную почту.">
 <title>Тип личности — Молдавская прослушка</title>
 <style>
 :root{--bg:#f0f2f5;--card:#fff;--text:#1c1e21;--muted:#65676b;--accent:#fa541c;--accent-hover:#e64a19;--border:#e4e6eb;--soft:#fff1eb;--shadow:0 8px 30px rgba(0,0,0,.06);--green:#21875a}
@@ -23,7 +23,7 @@ main{width:min(860px,calc(100% - 28px));margin:34px auto 64px}.hero,.panel,.ques
 <section class="hero" id="intro">
 <div class="eyebrow">✦ Опросник личности</div>
 <h1>Как ты обычно думаешь, общаешься и принимаешь решения?</h1>
-<p>60 утверждений помогут получить один из 16 описательных профилей. После прохождения ты увидишь краткий разбор по каждой шкале, который автоматически составляется из твоих ответов и работает без подключения ИИ.</p>
+<p>60 утверждений помогут получить один из 16 описательных профилей. После прохождения ты увидишь предварительный результат по четырём шкалам. Подробный персональный разбор будет подготовлен отдельно и отправлен на электронную почту в течение 1–2 дней после подтверждения адреса.</p>
 <div class="hero-grid">
 <div class="hero-stat"><b>60 вопросов</b><span>примерно 7–10 минут</span></div>
 <div class="hero-stat"><b>16 типов</b><span>четыре шкалы предпочтений</span></div>
@@ -48,7 +48,7 @@ main{width:min(860px,calc(100% - 28px));margin:34px auto 64px}.hero,.panel,.ques
 <div class="error hidden" id="answerError">Выбери один вариант, чтобы продолжить.</div>
 <div class="qnav"><button class="secondary" id="backBtn" type="button">← Назад</button><div class="qnav-right"><button class="quiet" id="exitBtn" type="button">Выйти</button><button class="primary" id="nextBtn" type="button">Далее →</button></div></div>
 </div>
-<p class="footer-note">Ответы не сохраняются на сервере. После завершения можно отдельно согласиться на отправку части ответов в ИИ для персонального комментария.</p>
+<p class="footer-note">Ответы сохраняются только после подтверждения электронной почты и согласия на обработку данных. Подробный разбор готовится вручную и отправляется отдельно.</p>
 </section>
 <section class="hidden" id="results">
 <div class="result-card" style="padding:clamp(22px,5vw,42px)">
@@ -60,13 +60,25 @@ main{width:min(860px,calc(100% - 28px));margin:34px auto 64px}.hero,.panel,.ques
 <div class="type-grid" id="typeLetters"></div>
 <div class="axis-list" id="axisResults"></div>
 <div class="notice" id="interpretationNotice"></div>
-<div class="ai-box" id="aiBox">
-<h3>Персональный ИИ-разбор</h3>
-<p class="muted" id="aiPrivacy">Если нажать кнопку ниже, на сервер ИИ будут отправлены четыре итоговые шкалы и несколько выбранных тобой ответов. Имя, адрес и другие идентификаторы не запрашиваются. Не включай в ответы конфиденциальные сведения.</p>
-<button class="primary" id="aiBtn" type="button">Создать подробный разбор</button>
-<div class="loading hidden" id="aiLoading"><span class="spinner" aria-hidden="true"></span><span>ИИ анализирует сочетание результатов и выбранных ответов…</span></div>
-<div class="error hidden" id="aiError"></div>
-<div class="ai-report hidden" id="aiReport"></div>
+<div class="ai-box" id="reportRequestBox">
+<h3>Получить подробный персональный разбор</h3>
+<p class="muted">Подробный анализ подготовит автор проекта с помощью отдельной нейросети и отправит тебе два файла — HTML и PDF — на указанную электронную почту в течение 1–2 дней после подтверждения адреса.</p>
+<div class="field-group" style="display:grid;gap:7px;margin:16px 0">
+<label for="reportEmail" style="font-weight:750;font-size:14px">Твоя электронная почта</label>
+<input id="reportEmail" type="email" autocomplete="email" placeholder="name@example.com" required style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font:inherit">
+<label for="reportLanguage" style="font-weight:750;font-size:14px;margin-top:7px">Язык подробного отчёта</label>
+<select id="reportLanguage" style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font:inherit"><option value="ru">Русский</option><option value="en">English</option></select>
+<label style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin-top:7px"><input id="reportConsent" type="checkbox" style="margin-top:4px;accent-color:var(--accent)"><span>Я согласен(на) на передачу моих ответов и результатов автору проекта для подготовки и отправки персонального отчёта. Адрес и результаты будут использоваться только для этой цели.</span></label>
+</div>
+<button class="primary" id="requestCodeBtn" type="button">Отправить код подтверждения</button>
+<div class="hidden" id="verifyCodePanel" style="margin-top:16px">
+<label for="emailCode" style="display:block;font-weight:750;font-size:14px;margin-bottom:7px">Шестизначный код из письма</label>
+<input id="emailCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font:inherit;letter-spacing:.25em">
+<button class="primary" id="verifySubmitBtn" type="button" style="margin-top:12px">Подтвердить email и отправить результаты</button>
+</div>
+<div class="loading hidden" id="requestLoading" style="margin-top:14px"><span class="spinner" aria-hidden="true"></span><span id="requestLoadingText">Обрабатываем запрос…</span></div>
+<div class="error hidden" id="requestError" role="alert"></div>
+<div class="notice hidden" id="requestSuccess" role="status"></div>
 </div>
 <div class="button-row"><button class="secondary" id="restartBtn" type="button">Пройти заново</button><button class="secondary" id="printBtn" type="button">Сохранить / распечатать</button><a class="navlink" href="./index.html">На главную</a></div>
 </div>
@@ -74,7 +86,10 @@ main{width:min(860px,calc(100% - 28px));margin:34px auto 64px}.hero,.panel,.ques
 </section>
 </main>
 <script>
-const AI_API_URL = ""; // После публикации Cloudflare Worker укажи адрес вида https://ИМЯ.WORKERS.DEV/report
+// Укажи URL Supabase Edge Functions после создания отдельного проекта.
+// Пример: https://PROJECT_REF.supabase.co/functions/v1
+// Пока URL пустой, отправка заявок не активируется.
+const SUPABASE_FUNCTIONS_URL = "";
 const QUESTIONS = [{"id":"q1","axis":"EI","pole":"E","text":"Я часто сам начинаю разговор с незнакомыми людьми."},{"id":"q2","axis":"EI","pole":"I","text":"После насыщенного общения мне обычно нужно побыть одному, чтобы восстановить силы."},{"id":"q3","axis":"EI","pole":"E","text":"Мне нравится думать вслух, обсуждая идеи с другими."},{"id":"q4","axis":"EI","pole":"I","text":"Я предпочитаю сначала обдумать мысль, а потом высказать её."},{"id":"q5","axis":"EI","pole":"E","text":"В группе мне обычно легко включиться в общий разговор."},{"id":"q6","axis":"EI","pole":"I","text":"Я чаще выбираю спокойный вечер в одиночестве, чем шумное мероприятие."},{"id":"q7","axis":"EI","pole":"E","text":"Совместные занятия обычно заряжают меня энергией."},{"id":"q8","axis":"EI","pole":"I","text":"Мне комфортнее общаться с несколькими близкими людьми, чем с большой компанией."},{"id":"q9","axis":"EI","pole":"E","text":"Когда я попадаю в новую компанию, мне обычно хочется познакомиться с людьми."},{"id":"q10","axis":"EI","pole":"I","text":"Я могу долго быть довольным, занимаясь чем-то самостоятельно."},{"id":"q11","axis":"EI","pole":"E","text":"Мне проще разобраться в своих мыслях, если я обсуждаю их с кем-то."},{"id":"q12","axis":"EI","pole":"I","text":"В разговоре я чаще слушаю и наблюдаю, прежде чем вступить."},{"id":"q13","axis":"EI","pole":"E","text":"Я обычно не против оказаться в центре группового обсуждения."},{"id":"q14","axis":"EI","pole":"I","text":"После долгого дня мне чаще хочется тишины, чем новых впечатлений от общения."},{"id":"q15","axis":"EI","pole":"E","text":"Я охотно знакомлюсь с людьми, если оказываюсь на общем мероприятии."},{"id":"q16","axis":"SN","pole":"S","text":"Мне проще работать с конкретными примерами, чем с абстрактными теориями."},{"id":"q17","axis":"SN","pole":"N","text":"Мне интересно придумывать разные варианты того, как ситуация может развиваться."},{"id":"q18","axis":"SN","pole":"S","text":"Я обычно замечаю практические детали, которые другие могут пропустить."},{"id":"q19","axis":"SN","pole":"N","text":"Я часто замечаю связи между идеями, которые на первый взгляд не связаны."},{"id":"q20","axis":"SN","pole":"S","text":"При изучении новой темы мне полезнее пошаговое объяснение с примерами."},{"id":"q21","axis":"SN","pole":"N","text":"Мне нравится размышлять о концепциях, даже если у них нет немедленного практического применения."},{"id":"q22","axis":"SN","pole":"S","text":"Я больше доверяю информации, которую можно непосредственно проверить."},{"id":"q23","axis":"SN","pole":"N","text":"Мне интереснее обсуждать перспективы и возможности, чем только текущие факты."},{"id":"q24","axis":"SN","pole":"S","text":"Я предпочитаю понятные инструкции, а не свободную интерпретацию задачи."},{"id":"q25","axis":"SN","pole":"N","text":"Я часто представляю, как привычные вещи могли бы работать иначе."},{"id":"q26","axis":"SN","pole":"S","text":"Я обычно опираюсь на опыт того, что уже сработало."},{"id":"q27","axis":"SN","pole":"N","text":"Мне легко увлечься идеей, даже если пока неясно, как воплотить её в жизнь."},{"id":"q28","axis":"SN","pole":"S","text":"В рассказах и объяснениях я прежде всего обращаю внимание на конкретные события."},{"id":"q29","axis":"SN","pole":"N","text":"Мне интереснее общий смысл и возможные закономерности, чем отдельные детали."},{"id":"q30","axis":"SN","pole":"S","text":"Я предпочитаю решать задачу проверенным способом, если он работает."},{"id":"q31","axis":"TF","pole":"T","text":"При принятии решения я прежде всего стараюсь оценить логику аргументов."},{"id":"q32","axis":"TF","pole":"F","text":"Мне важно учитывать, как решение повлияет на чувства людей, которых оно касается."},{"id":"q33","axis":"TF","pole":"T","text":"В споре я стараюсь отделять убедительность аргумента от симпатии к человеку."},{"id":"q34","axis":"TF","pole":"F","text":"При разногласиях для меня важно сохранить уважительные отношения."},{"id":"q35","axis":"TF","pole":"T","text":"Я могу прямо указать на ошибку, даже если разговор становится немного неловким."},{"id":"q36","axis":"TF","pole":"F","text":"Я подбираю слова так, чтобы критика не звучала унизительно."},{"id":"q37","axis":"TF","pole":"T","text":"Для меня важно, чтобы правила применялись последовательно и справедливо."},{"id":"q38","axis":"TF","pole":"F","text":"В сложном выборе я учитываю личные обстоятельства и потребности людей."},{"id":"q39","axis":"TF","pole":"T","text":"Мне удобнее обсуждать проблему через факты, причины и последствия."},{"id":"q40","axis":"TF","pole":"F","text":"При решении конфликта я стараюсь понять чувства и мотивы каждой стороны."},{"id":"q41","axis":"TF","pole":"T","text":"Если идея не работает, я предпочитаю честно сказать об этом, даже если она кому-то дорога."},{"id":"q42","axis":"TF","pole":"F","text":"Я часто замечаю, когда кому-то в компании некомфортно, и стараюсь поддержать."},{"id":"q43","axis":"TF","pole":"T","text":"При выборе из двух вариантов я стараюсь применять одинаковые критерии к обоим."},{"id":"q44","axis":"TF","pole":"F","text":"Для меня личные ценности могут быть важнее формально безупречного решения."},{"id":"q45","axis":"TF","pole":"T","text":"Я обычно ищу наиболее последовательное объяснение проблемы."},{"id":"q46","axis":"JP","pole":"J","text":"Мне спокойнее, когда у меня есть план на день."},{"id":"q47","axis":"JP","pole":"P","text":"Мне нравится оставлять место для спонтанных решений."},{"id":"q48","axis":"JP","pole":"J","text":"Я стараюсь завершать дела заранее, а не откладывать до последнего момента."},{"id":"q49","axis":"JP","pole":"P","text":"Я часто начинаю действовать, а детали уточняю по ходу."},{"id":"q50","axis":"JP","pole":"J","text":"Мне легче работать, когда сроки и этапы задачи заранее определены."},{"id":"q51","axis":"JP","pole":"P","text":"Я предпочитаю сохранять несколько вариантов, пока не станет яснее, что лучше."},{"id":"q52","axis":"JP","pole":"J","text":"После принятия решения я обычно хочу перейти к выполнению плана."},{"id":"q53","axis":"JP","pole":"P","text":"Если появляется интересная новая возможность, я готов изменить свои планы."},{"id":"q54","axis":"JP","pole":"J","text":"Я регулярно раскладываю вещи и материалы так, чтобы легко их найти."},{"id":"q55","axis":"JP","pole":"P","text":"Я нормально отношусь к изменению расписания в последний момент."},{"id":"q56","axis":"JP","pole":"J","text":"Мне приятно вычёркивать выполненные пункты из списка дел."},{"id":"q57","axis":"JP","pole":"P","text":"Я предпочитаю не фиксировать заранее каждую деталь свободного времени."},{"id":"q58","axis":"JP","pole":"J","text":"Я обычно принимаю решение, когда информации достаточно, и не люблю бесконечно откладывать выбор."},{"id":"q59","axis":"JP","pole":"P","text":"Мне интересно исследовать варианты, даже когда можно было бы уже выбрать один."},{"id":"q60","axis":"JP","pole":"J","text":"Я чувствую себя увереннее, когда понимаю, что будет происходить дальше."}];
 const AXES = {
  EI:{left:"E · Экстраверсия",right:"I · Интроверсия",leftShort:"E",rightShort:"I",name:"Социальная энергия",explain:"насколько ответы склоняются к взаимодействию с людьми или к самостоятельному восстановлению сил"},
@@ -122,10 +137,10 @@ function getAxisDescription(axis, data){
 
 const answerLabels={1:"Совсем не согласен",2:"Скорее не согласен",3:"Зависит от ситуации / нейтрально",4:"Скорее согласен",5:"Полностью согласен"};
 const $=id=>document.getElementById(id);
-let order=[],answers={},index=0,resultsData=null,aiRequested=false;
+let order=[],answers={},index=0,resultsData=null;
 function shuffle(arr){const out=[...arr];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function show(el){el.classList.remove("hidden")}function hide(el){el.classList.add("hidden")}
-function startTest(){order=shuffle(QUESTIONS);answers={};index=0;resultsData=null;aiRequested=false;hide($("intro"));hide($("howPanel"));hide($("results"));show($("quizPanel"));renderQuestion();window.scrollTo({top:0,behavior:"smooth"})}
+function startTest(){order=shuffle(QUESTIONS);answers={};index=0;resultsData=null;hide($("intro"));hide($("howPanel"));hide($("results"));show($("quizPanel"));renderQuestion();window.scrollTo({top:0,behavior:"smooth"})}
 function renderQuestion(){
  const q=order[index];$("progressLabel").textContent=`Вопрос ${index+1} из ${order.length}`;$("progressPct").textContent=`${Math.round((index+1)/order.length*100)}%`;$("progressFill").style.width=`${(index+1)/order.length*100}%`;$("progressBar").setAttribute("aria-valuenow",String(index+1));
  $("axisMeta").textContent=({EI:"Общение и восстановление сил",SN:"Факты, детали и возможности",TF:"Логика, ценности и решения",JP:"Планирование и гибкость"})[q.axis];
@@ -148,26 +163,41 @@ function renderResults(){
  const letters=$("typeLetters");letters.replaceChildren();for(let i=0;i<4;i++){const axis=["EI","SN","TF","JP"][i],d=axisResults[axis],side=d.score<50?AXES[axis].leftShort:AXES[axis].rightShort,chip=document.createElement("div");chip.className="type-chip";const b=document.createElement("b");b.textContent=type[i];const s=document.createElement("span");s.textContent=({EI:"Общение",SN:"Информация",TF:"Решения",JP:"Организация"})[axis];chip.append(b,s);letters.append(chip)}
  const list=$("axisResults");list.replaceChildren();for(const axis of ["EI","SN","TF","JP"]){const cfg=AXES[axis],d=axisResults[axis],leftScore=100-d.score,chosen=d.score<50?cfg.leftShort:cfg.rightShort,dist=Math.abs(d.score-50)*2;const item=document.createElement("div");const head=document.createElement("div");head.className="axis-head";const name=document.createElement("span");name.textContent=cfg.name;const value=document.createElement("small");value.textContent=`${chosen} · ${dist<16?"почти середина":dist<40?"умеренный уклон":"заметный уклон"}`;head.append(name,value);const scale=document.createElement("div");scale.className="axis-scale";scale.setAttribute("aria-label",`${cfg.leftShort} ${Math.round(leftScore)}%, ${cfg.rightShort} ${Math.round(d.score)}%`);const fill=document.createElement("div");fill.className="axis-fill";fill.style.width=`${d.score}%`;scale.append(fill);const labels=document.createElement("div");labels.className="axis-labels";const l=document.createElement("span");l.textContent=`${cfg.left} · ${Math.round(leftScore)}%`;const r=document.createElement("span");r.textContent=`${cfg.right} · ${Math.round(d.score)}%`;labels.append(l,r);const desc=document.createElement("div");desc.className="strength";desc.textContent=`${cfg.explain}. Это доля по внутренней шкале опросника, а не процент вероятности или научная норма.`;item.append(head,scale,labels,desc);list.append(item)}
  const close=Object.values(axisResults).some(d=>Math.abs(d.score-50)<12);$("interpretationNotice").textContent=close?"По одной или нескольким шкалам результат близок к середине. Поэтому буквенный тип может быть неустойчивым: похожие ответы в другой день могут изменить одну букву. Обрати особое внимание на сами шкалы, а не только на код.":"Буквенный код выбран по направлению каждой шкалы. Он упрощает результаты и не должен восприниматься как точная или неизменная категория.";
- $("aiReport").textContent="";hide($("aiReport"));hide($("aiError"));hide($("aiLoading"));$("aiBtn").disabled=false;$("aiBtn").textContent=AI_API_URL?"Создать подробный разбор":"ИИ-разбор не подключён — настрой URL API";$("aiBtn").disabled=!AI_API_URL; if(!AI_API_URL){$("aiPrivacy").textContent="Чтобы включить ИИ, сначала опубликуй серверный Worker и впиши его URL в переменную AI_API_URL в начале скрипта этой страницы. Пока доступен только автоматический результат по шкалам."}
+ hide($("verifyCodePanel"));hide($("requestError"));hide($("requestSuccess"));$("requestCodeBtn").disabled=false;$("requestCodeBtn").textContent="Отправить код подтверждения";$("reportEmail").value="";$("emailCode").value="";$("reportConsent").checked=false;
 }
-async function requestAI(){
- if(!AI_API_URL||!resultsData||aiRequested)return;
- aiRequested=true;$("aiBtn").disabled=true;show($("aiLoading"));hide($("aiError"));hide($("aiReport"));
- const topAnswers=QUESTIONS.filter(q=>[1,2,4,5].includes(resultsData.answers[q.id])).map(q=>({question:q.text,answer:resultsData.answers[q.id],answerText:answerLabels[resultsData.answers[q.id]],axis:AXES[q.axis].name,pole:q.pole})).sort((a,b)=>Math.abs(b.answer-3)-Math.abs(a.answer-3)).slice(0,10);
- const payload={type:resultsData.type,axes:Object.fromEntries(Object.entries(resultsData.axisResults).map(([k,v])=>[k,{score:v.score,side:v.score<50?AXES[k].leftShort:AXES[k].rightShort}])),answers:topAnswers};
+function showRequestError(message){hide($("requestSuccess"));show($("requestError"));$("requestError").textContent=message}
+async function requestEmailCode(){
+ hide($("requestError"));hide($("requestSuccess"));
+ const email=$("reportEmail").value.trim();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showRequestError("Проверь адрес электронной почты.");return}
+ if(!$("reportConsent").checked){showRequestError("Чтобы отправить результаты, необходимо согласиться на их обработку для подготовки отчёта.");return}
+ if(!SUPABASE_FUNCTIONS_URL){showRequestError("Приём заявок пока не подключён: сначала нужно создать отдельный проект Supabase и добавить URL его серверных функций. Тест и подсчёт результатов работают, но заявка пока не отправляется.");return}
+ $("requestCodeBtn").disabled=true;show($("requestLoading"));$("requestLoadingText").textContent="Отправляем код подтверждения…";
  try{
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),45000);
-  const response=await fetch(AI_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:controller.signal});clearTimeout(timeout);
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.error||`Сервер ответил с кодом ${response.status}.`);
-  if(typeof data.report!=="string"||!data.report.trim())throw new Error("Сервер вернул пустой ответ.");
-  $("aiReport").textContent=data.report.trim();show($("aiReport"));
- }catch(err){aiRequested=false;$("aiBtn").disabled=false;show($("aiError"));$("aiError").textContent=err.name==="AbortError"?"Запрос занял слишком много времени. Попробуй ещё раз.":`Не удалось получить ИИ-разбор: ${err.message||"ошибка соединения"}. Проверь URL API и настройки сервера.`}
- finally{hide($("aiLoading"))}
+  const response=await fetch(`${SUPABASE_FUNCTIONS_URL}/request-email-code`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,reportLanguage:$("reportLanguage").value})});
+  const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Не удалось отправить код. Попробуй позже.");
+  show($("verifyCodePanel"));show($("requestSuccess"));$("requestSuccess").textContent="Код отправлен на указанную почту. Введи его ниже, чтобы подтвердить адрес и передать результаты.";
+ }catch(err){showRequestError(err.message||"Ошибка соединения. Попробуй ещё раз.")}
+ finally{hide($("requestLoading"));$("requestCodeBtn").disabled=false}
+}
+async function verifyAndSubmit(){
+ hide($("requestError"));hide($("requestSuccess"));
+ const email=$("reportEmail").value.trim(),code=$("emailCode").value.trim();
+ if(!/^\d{6}$/.test(code)){showRequestError("Введи шестизначный код из письма.");return}
+ if(!SUPABASE_FUNCTIONS_URL){showRequestError("Приём заявок пока не подключён.");return}
+ const fullAnswers=QUESTIONS.map(q=>({id:q.id,question:q.text,axis:q.axis,pole:q.pole,value:resultsData.answers[q.id],answerLabel:answerLabels[resultsData.answers[q.id]]}));
+ const payload={email,code,reportLanguage:$("reportLanguage").value,consent:true,results:{type:resultsData.type,axisResults:resultsData.axisResults,answers:fullAnswers}};
+ $("verifySubmitBtn").disabled=true;show($("requestLoading"));$("requestLoadingText").textContent="Подтверждаем адрес и сохраняем результаты…";
+ try{
+  const response=await fetch(`${SUPABASE_FUNCTIONS_URL}/submit-test-results`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Не удалось подтвердить email или сохранить результаты.");
+  hide($("verifyCodePanel"));$("requestCodeBtn").disabled=true;$("requestCodeBtn").textContent="Заявка отправлена ✓";show($("requestSuccess"));$("requestSuccess").textContent="Email подтверждён, результаты теста получены. Подробный отчёт в формате HTML и PDF будет отправлен на указанную почту в течение 1–2 дней.";
+ }catch(err){showRequestError(err.message||"Ошибка соединения. Попробуй ещё раз.")}
+ finally{hide($("requestLoading"));$("verifySubmitBtn").disabled=false}
 }
 $("startBtn").addEventListener("click",startTest);$("howBtn").addEventListener("click",()=>{const p=$("howPanel");p.classList.toggle("hidden");if(!p.classList.contains("hidden"))p.scrollIntoView({behavior:"smooth",block:"nearest"})});
 $("backBtn").addEventListener("click",()=>{if(index>0){index--;renderQuestion()}});$("nextBtn").addEventListener("click",nextQuestion);$("exitBtn").addEventListener("click",()=>{if(confirm("Выйти из теста? Текущий прогресс будет сброшен.")){hide($("quizPanel"));show($("intro"));window.scrollTo({top:0,behavior:"smooth"})}});
-$("aiBtn").addEventListener("click",requestAI);$("restartBtn").addEventListener("click",()=>{hide($("results"));show($("intro"));window.scrollTo({top:0,behavior:"smooth"})});$("printBtn").addEventListener("click",()=>window.print());
+$("requestCodeBtn").addEventListener("click",requestEmailCode);$("verifySubmitBtn").addEventListener("click",verifyAndSubmit);$("restartBtn").addEventListener("click",()=>{hide($("results"));show($("intro"));window.scrollTo({top:0,behavior:"smooth"})});$("printBtn").addEventListener("click",()=>window.print());
 $("themeToggle").addEventListener("click",()=>{document.body.classList.toggle("dark");$("themeToggle").textContent=document.body.classList.contains("dark")?"☀️":"🌙";try{localStorage.setItem("personality-theme",document.body.classList.contains("dark")?"dark":"light")}catch(e){}});
 try{if(localStorage.getItem("personality-theme")==="dark"){document.body.classList.add("dark");$("themeToggle").textContent="☀️"}}catch(e){}
 </script>
