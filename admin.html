@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админ-панель — Тест личности</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--text:#202124;--muted:#70757a;--accent:#fa541c;--border:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Arial,sans-serif}
+header{background:white;border-bottom:1px solid var(--border);padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
+main{max-width:1100px;margin:28px auto;padding:0 16px 50px}
+.card{background:white;border:1px solid var(--border);border-radius:17px;padding:22px;margin-bottom:16px}
+h1{font-size:28px;margin:0 0 8px}h2{font-size:20px}
+.muted{color:var(--muted)}
+.login{max-width:430px;margin:55px auto}
+label{display:block;font-weight:bold;margin:14px 0 6px}
+input{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px}
+button{padding:10px 15px;border:0;border-radius:10px;font-weight:bold;cursor:pointer}
+.primary{background:var(--accent);color:white}
+.secondary{background:white;border:1px solid var(--border)}
+button:disabled{opacity:.5}
+.hidden{display:none!important}
+.error{color:#b42318;margin-top:10px}
+.stats,.toolbar,.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.stat{background:#f7f7f8;border-radius:12px;padding:12px 16px;min-width:140px}
+.stat b{display:block;font-size:23px}
+.toolbar input{flex:1;min-width:220px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--border);font-size:13px}
+th{color:var(--muted)}
+.pill{background:#fff0e9;color:var(--accent);padding:4px 9px;border-radius:20px;font-weight:bold}
+.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+.meta div,.answer{background:#f6f7f8;border-radius:10px;padding:11px;overflow-wrap:anywhere}
+.meta small{display:block;color:var(--muted)}
+.answers{display:grid;gap:7px}
+.answer{display:flex;justify-content:space-between;gap:12px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){.card{padding:16px}.meta{grid-template-columns:1fr 1fr}.answer{flex-direction:column;gap:3px}}
+</style>
+</head>
+<body>
+<header>
+<strong>Тест личности · Администратор</strong>
+<div class="actions">
+<button class="secondary hidden" id="refresh">Обновить</button>
+<button class="secondary hidden" id="logout">Выйти</button>
+</div>
+</header>
+<main>
+<section class="card login" id="loginCard">
+<h1>Вход администратора</h1>
+<p class="muted">Войди через учётную запись Supabase.</p>
+<form id="loginForm">
+<label for="email">Электронная почта</label>
+<input id="email" type="email" value="shippingdaniil@gmail.com" required>
+<label for="password">Пароль</label>
+<input id="password" type="password" required>
+<button class="primary" id="loginButton" style="width:100%;margin-top:17px">Войти</button>
+<div class="error" id="loginError"></div>
+</form>
+</section>
+
+<section id="app" class="hidden">
+<div class="card">
+<h1>Результаты тестирования</h1>
+<p class="muted">Здесь отображаются отправленные результаты участников.</p>
+<div class="stats">
+<div class="stat"><b id="total">0</b><span class="muted">Всего прохождений</span></div>
+<div class="stat"><b id="today">0</b><span class="muted">Сегодня</span></div>
+</div>
+<div class="toolbar">
+<input id="search" type="search" placeholder="Поиск по email или типу личности">
+<button class="secondary" id="exportAll">Скачать все JSON</button>
+</div>
+<p class="muted" id="message"></p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Дата</th><th>Email</th><th>Тип</th><th>Статус</th><th></th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<p class="muted hidden" id="empty">Результатов пока нет.</p>
+</div>
+
+<div class="card hidden" id="details">
+<div class="actions">
+<h2 style="margin-right:auto">Полный результат</h2>
+<button class="secondary" id="copy">Скопировать текст</button>
+<button class="secondary" id="exportOne">Скачать JSON</button>
+<button class="secondary" id="close">Закрыть</button>
+</div>
+<div class="meta" id="meta"></div>
+<h2>Результаты по шкалам</h2>
+<pre id="axes"></pre>
+<h2>Ответы на вопросы</h2>
+<div class="answers" id="answers"></div>
+</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://zfjkwdmfhbyohdmqogvp.supabase.co";
+const SUPABASE_KEY="sb_publishable_tMdL5NeAF9g2ikjt_LFNSg_wzvDm37e";
+const ADMIN_EMAIL="shippingdaniil@gmail.com";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+let records=[];
+let current=null;
+
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=v=>{if(!v)return "—";const d=new Date(v);return isNaN(d)?"—":d.toLocaleString("ru-RU");};
+const answersOf=v=>Array.isArray(v)?v:(Array.isArray(v?.answers)?v.answers:[]);
+
+function saveFile(name,obj){
+ const url=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:"application/json"}));
+ const a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+}
+function textOf(r){
+ return ["РЕЗУЛЬТАТ ТЕСТА","Дата: "+fmt(r.created_at),"Email: "+r.email,"Тип: "+r.result_type,"Язык: "+r.report_language,"Статус: "+(r.status||"Новый"),"ШКАЛЫ",JSON.stringify(r.axis_results,null,2),"ОТВЕТЫ",...answersOf(r.answers).map(a=>a.id+": "+a.value)].join("\n");
+}
+function render(){
+ const q=$("search").value.toLowerCase().trim();
+ const list=records.filter(r=>(r.email||"").toLowerCase().includes(q)||(r.result_type||"").toLowerCase().includes(q));
+ $("rows").innerHTML=list.map(r=>`<tr><td>${esc(fmt(r.created_at))}</td><td>${esc(r.email)}</td><td><span class="pill">${esc(r.result_type)}</span></td><td>${esc(r.status||"Новый")}</td><td><button class="secondary" data-id="${esc(r.id)}">Открыть</button></td></tr>`).join("");
+ $("rows").querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>openRecord(b.dataset.id));
+ $("empty").classList.toggle("hidden",list.length>0);
+ $("total").textContent=records.length;
+ const today=new Date().toLocaleDateString("en-CA");
+ $("today").textContent=records.filter(r=>r.created_at&&new Date(r.created_at).toLocaleDateString("en-CA")===today).length;
+}
+function openRecord(id){
+ current=records.find(r=>String(r.id)===String(id));if(!current)return;
+ const fields=[["Дата",fmt(current.created_at)],["Email",current.email],["Тип личности",current.result_type],["Язык отчёта",current.report_language],["Статус",current.status||"Новый"],["ID",current.id]];
+ $("meta").innerHTML=fields.map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join("");
+ $("axes").textContent=JSON.stringify(current.axis_results,null,2);
+ $("answers").innerHTML=answersOf(current.answers).map((a,i)=>`<div class="answer"><b>${esc(a.id||"Вопрос "+(i+1))}</b><span>Ответ: ${esc(a.value)}</span></div>`).join("")||"<p>Ответы не найдены.</p>";
+ $("details").classList.remove("hidden");$("details").scrollIntoView({behavior:"smooth"});
+}
+async function load(){
+ $("message").textContent="Загружаю результаты…";$("refresh").disabled=true;
+ try{
+  const {data,error}=await db.functions.invoke("admin-list-submissions",{method:"GET"});
+  if(error)throw error;
+  if(!data?.ok||!Array.isArray(data.submissions))throw new Error(data?.error||"Неожиданный ответ сервера");
+  records=data.submissions;render();$("message").textContent="Данные обновлены.";
+ }catch(e){$("message").textContent="Ошибка загрузки: "+(e.message||"неизвестная ошибка");}
+ finally{$("refresh").disabled=false;}
+}
+async function enter(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user||user.email?.toLowerCase()!==ADMIN_EMAIL){
+  await db.auth.signOut();$("loginCard").classList.remove("hidden");$("app").classList.add("hidden");return;
+ }
+ $("loginCard").classList.add("hidden");$("app").classList.remove("hidden");
+ $("refresh").classList.remove("hidden");$("logout").classList.remove("hidden");
+ await load();
+}
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();$("loginButton").disabled=true;$("loginError").textContent="Выполняется вход…";
+ try{
+  const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error)throw error;await enter();
+ }catch(err){$("loginError").textContent=err.message||"Не удалось войти";}
+ finally{$("loginButton").disabled=false;}
+});
+$("refresh").onclick=load;
+$("logout").onclick=async()=>{await db.auth.signOut();location.reload();};
+$("search").oninput=render;
+$("exportAll").onclick=()=>saveFile("personality-submissions.json",records);
+$("exportOne").onclick=()=>current&&saveFile("personality-"+current.id+".json",current);
+$("copy").onclick=async()=>{
+ if(!current)return;
+ try{await navigator.clipboard.writeText(textOf(current));$("copy").textContent="Скопировано";}
+ catch{$("copy").textContent="Не удалось скопировать";}
+};
+$("close").onclick=()=>$("details").classList.add("hidden");
+db.auth.getSession().then(({data})=>{if(data.session)enter();});
+</script>
+</body>
+</html>
