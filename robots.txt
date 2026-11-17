@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /Danones-post.github.io/admin.html
+Disallow: /Danones-post.github.io/admin-content.html
+Disallow: /Danones-post.github.io/account.html
+Disallow: /Danones-post.github.io/login.html
+Disallow: /Danones-post.github.io/favorites.html
+
+Sitemap: https://danone993.github.io/Danones-post.github.io/sitemap.xml
