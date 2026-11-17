@@ -9,7 +9,7 @@
 
 if(!st.user){location.replace(MS.loginUrl());return}
 async function draw(){
-const {data,error}=await sb.from("favorites").select("created_at,articles(id,slug,title,subtitle,cover_url,cover_alt,access,published_at,categories(slug,name))").eq("user_id",st.user.id).order("created_at",{ascending:false});
+const {data,error}=await sb.from("favorites").select("created_at,articles(id,slug,title,subtitle,cover_url,cover_alt,access,source_url,published_at,categories(slug,name))").eq("user_id",st.user.id).order("created_at",{ascending:false});
 const list=(data||[]).map(r=>r.articles).filter(Boolean);
 app.innerHTML='<h1 class="ms-h1">Избранное</h1><p class="ms-lead">Материалы, к которым вы хотите вернуться.</p>'+(error?'<div class="ms-msg err">Не удалось загрузить избранное.</div>':list.length?`<div class="ms-grid">${list.map(MS.cardHTML).join("")}</div>`:'<div class="ms-empty"><p><b>Пока ничего не сохранено</b></p><p>Нажмите на закладку на любой публикации, чтобы вернуться к ней позже.</p><a class="ms-btn primary" href="category.html">Выбрать материал</a></div>');}
 await draw();

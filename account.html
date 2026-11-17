@@ -9,7 +9,7 @@
 
 if(!st.user){location.replace(MS.loginUrl());return}
 const act=MS.isPremium();
-const {data:favs}=await sb.from("favorites").select("articles(id,slug,title,cover_url,access,published_at,categories(name))").eq("user_id",st.user.id).order("created_at",{ascending:false}).limit(4);
+const {data:favs}=await sb.from("favorites").select("articles(id,slug,title,cover_url,access,source_url,published_at,categories(name))").eq("user_id",st.user.id).order("created_at",{ascending:false}).limit(4);
 const fl=(favs||[]).map(r=>r.articles).filter(Boolean);
 app.innerHTML=`<h1 class="ms-h1">Личный кабинет</h1><div class="ms-panel" style="max-width:640px;margin-bottom:20px">
 <p style="margin:0 0 4px;color:var(--ms-muted);font-size:13px">Электронная почта</p><p style="margin:0 0 18px;font-weight:750">${esc(st.user.email)}</p>

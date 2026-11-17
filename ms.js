@@ -27,7 +27,7 @@
   }
 
   let catPromise = null;
-  const categories = () => catPromise || (catPromise = sb.from("categories").select("id,slug,name,description").order("sort_order").order("name").then(r => r.data || []));
+  const categories = () => catPromise || (catPromise = sb.from("categories").select("id,slug,name,description,link_url").order("sort_order").order("name").then(r => r.data || []));
 
   function toast(msg) {
     let t = document.querySelector(".ms-toast");
@@ -51,7 +51,7 @@
     const cover = a.cover_url ? `<img class="ms-cover" loading="lazy" src="${esc(a.cover_url)}" alt="${esc(a.cover_alt || "")}">` : '<div class="ms-cover" role="img" aria-label=""></div>';
     return `<article class="ms-card">${bookmarkBtn(a.id)}${cover}<div class="ms-card-b">
       <div><span class="ms-tag">${esc(cat.name || "")}</span></div>
-      <h3><a href="article.html?a=${encodeURIComponent(a.slug)}">${esc(a.title)}</a></h3>
+      <h3><a href="${a.source_url ? esc(a.source_url) : "article.html?a=" + encodeURIComponent(a.slug)}">${esc(a.title)}</a></h3>
       ${a.subtitle ? `<p>${esc(a.subtitle)}</p>` : ""}
       <div class="ms-meta"><span>${esc(fmtDate(a.published_at))}</span>
       <span class="ms-tag${a.access === "premium" ? " prem" : ""}">${a.access === "premium" ? "★ Premium" : "Бесплатно"}</span></div></div></article>`;
@@ -85,7 +85,7 @@
     wrap.innerHTML = `<div class="ms-drawer-bg" data-ms-close></div>
       <nav class="ms-drawer" aria-label="Разделы" aria-hidden="true">
         <div class="ms-row" style="justify-content:space-between"><b style="font-size:18px">Разделы</b><button class="ms-ibtn" data-ms-close aria-label="Закрыть">✕</button></div>
-        <h4>Темы</h4>${cats.map(c => `<a href="${BASE}category.html?c=${encodeURIComponent(c.slug)}">${esc(c.name)}</a>`).join("") || '<span style="color:var(--ms-muted)">Скоро здесь появятся разделы</span>'}
+        <h4>Темы</h4>${cats.map(c => `<a href="${c.link_url ? BASE + esc(c.link_url) : BASE + "category.html?c=" + encodeURIComponent(c.slug)}">${esc(c.name)}</a>`).join("") || '<span style="color:var(--ms-muted)">Скоро здесь появятся разделы</span>'}
         <h4>Навигация</h4>
         <a href="${BASE}index.html">Главная</a><a href="${BASE}category.html">Все публикации</a><a href="${BASE}favorites.html">Избранное</a><a href="${BASE}premium.html">Premium</a><a href="${BASE}account.html">Личный кабинет</a>
       </nav>`;

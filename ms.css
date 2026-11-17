@@ -16,8 +16,8 @@ body.ms-page a{color:var(--ms-accent)}
 .ms-ibtn{width:40px;height:40px;justify-content:center;padding:0;font-size:17px}
 .ms-search{display:flex;max-width:260px;flex:1}
 .ms-search input{width:100%;font:inherit;font-size:13px;padding:9px 12px;border:1px solid var(--ms-border);border-radius:12px;background:var(--ms-card);color:var(--ms-text)}
-.ms-drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:900}
-.ms-drawer{position:fixed;top:0;left:0;bottom:0;width:min(330px,86vw);background:var(--ms-card);color:var(--ms-text);z-index:901;transform:translateX(-102%);transition:transform .25s;padding:20px;overflow:auto;border-right:1px solid var(--ms-border);font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.ms-drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:4990}
+.ms-drawer{position:fixed;top:0;left:0;bottom:0;width:min(330px,86vw);background:var(--ms-card);color:var(--ms-text);z-index:5000;transform:translateX(-102%);transition:transform .25s;padding:20px;padding-top:max(20px,env(safe-area-inset-top));overflow:auto;border-right:1px solid var(--ms-border);font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 .ms-open .ms-drawer{transform:none}.ms-open .ms-drawer-bg{opacity:1;pointer-events:auto}
 .ms-drawer h4{margin:22px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ms-muted)}
 .ms-drawer a{display:block;padding:10px 12px;border-radius:12px;text-decoration:none;color:var(--ms-text);font-weight:650}
@@ -81,3 +81,6 @@ body.dark .ms-msg.err{background:#3a1f1c;color:#ff9c91}body.dark .ms-msg.ok{back
 .ms-bm svg,.ms-ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;vertical-align:-3px}
 .ms-bm.on svg{fill:currentColor}
 .ms-bm{display:flex;align-items:center;justify-content:center;padding:0}
+.ms-acc-i{display:none}
+@media(max-width:700px){.ms-acc-t{display:none}.ms-acc-i{display:inline}}
+.ms-drawer a{min-height:44px;display:flex;align-items:center}

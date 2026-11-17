@@ -8,10 +8,11 @@
     var menu = document.createElement("button");
     menu.type = "button"; menu.className = "theme-button"; menu.id = "ms-menu"; menu.setAttribute("aria-label", "Открыть меню разделов"); menu.setAttribute("aria-expanded", "false"); menu.textContent = "☰";
     var acc = document.createElement("a");
-    acc.className = "theme-button"; acc.id = "ms-acc"; acc.href = "login.html"; acc.textContent = "Войти"; acc.style.textDecoration = "none"; acc.style.display = "inline-flex"; acc.style.alignItems = "center";
+    function setAcc(t, i) { acc.innerHTML = '<span class="ms-acc-t">' + t + '</span><span class="ms-acc-i">' + i + "</span>"; acc.setAttribute("aria-label", t); }
+    acc.className = "theme-button"; acc.id = "ms-acc"; acc.href = "login.html"; setAcc("Войти", "👤"); acc.style.textDecoration = "none"; acc.style.display = "inline-flex"; acc.style.alignItems = "center";
     box.insertBefore(acc, box.firstChild); box.insertBefore(menu, box.firstChild);
     menu.addEventListener("click", function () { menu.setAttribute("aria-expanded", "true"); MS.openDrawer(); });
-    MS.ready.then(function (st) { if (st.user) { acc.href = "account.html"; acc.textContent = MS.isPremium() ? "★ Кабинет" : "Кабинет"; } });
+    MS.ready.then(function (st) { if (st.user) { acc.href = "account.html"; setAcc(MS.isPremium() ? "★ Кабинет" : "Кабинет", MS.isPremium() ? "★" : "👤"); } });
   }
   function boot() { load(CDN, function () { load("ms.js", start); }); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();

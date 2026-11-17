@@ -10,11 +10,11 @@
 const p=new URLSearchParams(location.search),slug=p.get("c")||"",q=(p.get("q")||"").trim().slice(0,80);
 const cats=await MS.categories(),cur=cats.find(c=>c.slug===slug);
 document.title=(cur?cur.name:q?"Поиск: "+q:"Все публикации")+" — Молдавская прослушка";
-let qy=sb.from("articles").select("id,slug,title,subtitle,cover_url,cover_alt,access,published_at,categories!inner(slug,name)").order("published_at",{ascending:false}).limit(60);
+let qy=sb.from("articles").select("id,slug,title,subtitle,cover_url,cover_alt,access,source_url,published_at,categories!inner(slug,name)").order("published_at",{ascending:false}).limit(60);
 if(cur)qy=qy.eq("category_id",cur.id);
 if(q){const t=q.replace(/[%,()*\\]/g," ");qy=qy.or(`title.ilike.%${t}%,subtitle.ilike.%${t}%`)}
 const {data,error}=await qy;
-const chips=`<div class="ms-chips"><a href="category.html"${!cur&&!q?' class="on"':""}>Все</a>${cats.map(c=>`<a href="category.html?c=${encodeURIComponent(c.slug)}"${cur&&cur.id===c.id?' class="on"':""}>${esc(c.name)}</a>`).join("")}</div>`;
+const chips=`<div class="ms-chips"><a href="category.html"${!cur&&!q?' class="on"':""}>Все</a>${cats.map(c=>`<a href="${c.link_url?esc(c.link_url):"category.html?c="+encodeURIComponent(c.slug)}"${cur&&cur.id===c.id?' class="on"':""}>${esc(c.name)}</a>`).join("")}</div>`;
 const head=cur?`<h1 class="ms-h1">${esc(cur.name)}</h1><p class="ms-lead">${esc(cur.description)}</p>`:q?`<h1 class="ms-h1">Поиск: «${esc(q)}»</h1>`:`<h1 class="ms-h1">Все публикации</h1>`;
 app.innerHTML=head+chips+(error?'<div class="ms-msg err">Не удалось загрузить публикации.</div>':data&&data.length?`<div class="ms-grid">${data.map(MS.cardHTML).join("")}</div>`:'<div class="ms-empty">Здесь пока нет публикаций.</div>');
 
