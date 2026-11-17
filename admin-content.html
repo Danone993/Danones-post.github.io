@@ -38,11 +38,21 @@ async function formA(id){
  ${inp("cov","Обложка (ссылка)",a.cover_url||"","url")}<div class="ms-field"><label for="file">…или загрузить файл</label><input id="file" type="file" accept="image/*"></div>${inp("alt","Описание обложки (alt)",a.cover_alt||"")}
  <div class="ms-field"><label for="prev">Ознакомительный фрагмент (виден всем, HTML)</label><textarea id="prev" rows="4">${esc(a.preview_html||"")}</textarea></div>
  <div class="ms-field"><label for="body">Полный текст (HTML). У Premium-статей отдаётся только подписчикам</label><textarea id="body" rows="16">${esc(body)}</textarea></div>
+ <div class="ms-row" style="margin:-6px 0 14px"><button type="button" class="ms-btn" id="ins">🖼 Вставить фото в текст</button><input id="insf" type="file" accept="image/*" hidden><span id="inss" style="font-size:12px;color:var(--ms-muted)"></span></div>
  ${inp("st","SEO-заголовок",a.seo_title||"")}${inp("sd","SEO-описание",a.seo_description||"")}
  <div class="ms-row"><button class="ms-btn primary">Сохранить</button><button type="button" class="ms-btn" id="cancel">Отмена</button></div></form>`;
  const f=document.getElementById("f"),$=i=>document.getElementById(i);
  if(!id)$("title").addEventListener("input",()=>{$("slug").value=slugify($("title").value)});
  $("cancel").onclick=listA;
+ $("ins").onclick=()=>$("insf").click();
+ $("insf").onchange=async()=>{const file=$("insf").files[0];if(!file)return;
+  const alt=prompt("Описание фото (для доступности), можно оставить пустым")||"";$("inss").textContent="Загрузка…";
+  const path="body-"+Date.now()+"-"+slugify(file.name.replace(/\.[^.]+$/,""))+"."+(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const up=await sb.storage.from("covers").upload(path,file,{contentType:file.type});
+  if(up.error){$("inss").textContent="";return note("Не удалось загрузить фото: "+up.error.message,"err")}
+  const url=sb.storage.from("covers").getPublicUrl(path).data.publicUrl,t=$("body"),pos=t.selectionStart??t.value.length;
+  t.value=t.value.slice(0,pos)+"\n<img src=\""+url+"\" alt=\""+alt.replace(/"/g,"&quot;")+"\">\n"+t.value.slice(pos);
+  $("insf").value="";$("inss").textContent="Фото вставлено в место курсора";};
  f.onsubmit=async e=>{e.preventDefault();const btn=f.querySelector("button");btn.disabled=true;note("");
   let cover=$("cov").value.trim()||null;const file=$("file").files[0];
   if(file){const path=Date.now()+"-"+slugify(file.name.replace(/\.[^.]+$/,""))+"."+(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
