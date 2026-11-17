@@ -84,3 +84,4 @@ body.dark .ms-msg.err{background:#3a1f1c;color:#ff9c91}body.dark .ms-msg.ok{back
 .ms-acc-i{display:none}
 @media(max-width:700px){.ms-acc-t{display:none}.ms-acc-i{display:inline}}
 .ms-drawer a{min-height:44px;display:flex;align-items:center}
+.tge{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.25em;object-fit:contain;border-radius:0;margin:0 .05em}
