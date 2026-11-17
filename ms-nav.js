@@ -1,5 +1,6 @@
 /* Подключается на index.html одной строкой. Добавляет в существующую шапку кнопки «Меню» и «Войти/Кабинет». Остальное на странице не трогает. */
 (function () {
+  try { var tw = window.Telegram && Telegram.WebApp, sp = tw && tw.initDataUnsafe && tw.initDataUnsafe.start_param, pm = sp && /^prem_(10|31)$/.exec(sp); if (pm && location.pathname.indexOf("premium.html") < 0) { location.replace("premium.html?buy=" + pm[1]); return; } } catch (e) {}
   var CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
   function load(src, cb) { var s = document.createElement("script"); s.src = src; s.onload = cb; s.onerror = function () { console.warn("ms-nav: не загрузился " + src); }; document.head.appendChild(s); }
   var link = document.createElement("link"); link.rel = "stylesheet"; link.href = "ms.css"; document.head.appendChild(link);
