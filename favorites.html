@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Избранное — Молдавская прослушка</title><link rel="stylesheet" href="ms.css"></head>
+<body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app" aria-live="polite"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js"></script>
+<script>
+(async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;MS.header();const app=document.getElementById("app");
+
+if(!st.user){location.replace(MS.loginUrl());return}
+async function draw(){
+const {data,error}=await sb.from("favorites").select("created_at,articles(id,slug,title,subtitle,cover_url,cover_alt,access,published_at,categories(slug,name))").eq("user_id",st.user.id).order("created_at",{ascending:false});
+const list=(data||[]).map(r=>r.articles).filter(Boolean);
+app.innerHTML='<h1 class="ms-h1">Избранное</h1><p class="ms-lead">Материалы, к которым вы хотите вернуться.</p>'+(error?'<div class="ms-msg err">Не удалось загрузить избранное.</div>':list.length?`<div class="ms-grid">${list.map(MS.cardHTML).join("")}</div>`:'<div class="ms-empty"><p><b>Пока ничего не сохранено</b></p><p>Нажмите на закладку на любой публикации, чтобы вернуться к ней позже.</p><a class="ms-btn primary" href="category.html">Выбрать материал</a></div>');}
+await draw();
+document.addEventListener("ms:fav",e=>{if(!e.detail.on)setTimeout(draw,150)});
+
+})();
+</script></body></html>

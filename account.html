@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Личный кабинет — Молдавская прослушка</title><link rel="stylesheet" href="ms.css"></head>
+<body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app" aria-live="polite"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js"></script>
+<script>
+(async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;MS.header();const app=document.getElementById("app");
+
+if(!st.user){location.replace(MS.loginUrl());return}
+const act=MS.isPremium();
+const {data:favs}=await sb.from("favorites").select("articles(id,slug,title,cover_url,access,published_at,categories(name))").eq("user_id",st.user.id).order("created_at",{ascending:false}).limit(4);
+const fl=(favs||[]).map(r=>r.articles).filter(Boolean);
+app.innerHTML=`<h1 class="ms-h1">Личный кабинет</h1><div class="ms-panel" style="max-width:640px;margin-bottom:20px">
+<p style="margin:0 0 4px;color:var(--ms-muted);font-size:13px">Электронная почта</p><p style="margin:0 0 18px;font-weight:750">${esc(st.user.email)}</p>
+<p style="margin:0 0 4px;color:var(--ms-muted);font-size:13px">Статус</p><p style="margin:0 0 6px;font-weight:750">${act?'<span class="ms-tag prem">★ Premium</span>':"Обычный пользователь"}</p>
+${act?`<p style="margin:0 0 18px;color:var(--ms-muted)">Активен до ${esc(fmtDate(MS.st.premiumUntil))}</p>`:'<p style="margin:0 0 18px"><a href="premium.html">Открыть Premium</a></p>'}
+<button class="ms-btn" id="out">Выйти из аккаунта</button></div>
+<h2>Избранное</h2>${fl.length?`<div class="ms-grid">${fl.map(MS.cardHTML).join("")}</div><p><a href="favorites.html">Всё избранное →</a></p>`:'<div class="ms-empty">Вы ещё ничего не сохранили. <a href="category.html">Найти материал</a></div>'}`;
+document.getElementById("out").onclick=async()=>{await sb.auth.signOut();location.href="index.html"};
+
+})();
+</script></body></html>

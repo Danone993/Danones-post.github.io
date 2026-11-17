@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Вход — Молдавская прослушка</title><link rel="stylesheet" href="ms.css"></head>
+<body class="ms-page"><div class="ms-split"><div class="l"><div class="ms-form">
+<a href="index.html" style="text-decoration:none;font-weight:850;color:var(--ms-text);display:inline-block;margin-bottom:22px">Молдавская <span style="color:var(--ms-accent)">прослушка</span></a>
+<div class="ms-tabs" role="tablist"><button type="button" id="tIn" class="on">Вход</button><button type="button" id="tUp">Регистрация</button></div>
+<div id="msg" role="alert"></div>
+<form id="fIn"><div class="ms-field"><label for="e1">Электронная почта</label><input id="e1" type="email" autocomplete="email" required></div>
+<div class="ms-field"><label for="p1">Пароль</label><input id="p1" type="password" autocomplete="current-password" required></div>
+<button class="ms-btn primary" style="width:100%;justify-content:center">Войти</button>
+<p style="text-align:center;margin:14px 0 0"><a href="#" id="forgot">Забыли пароль?</a></p></form>
+<form id="fUp" hidden><div class="ms-field"><label for="e2">Электронная почта</label><input id="e2" type="email" autocomplete="email" required></div>
+<div class="ms-field"><label for="p2">Пароль (минимум 8 символов)</label><input id="p2" type="password" autocomplete="new-password" minlength="8" required></div>
+<div class="ms-field"><label for="p3">Повторите пароль</label><input id="p3" type="password" autocomplete="new-password" minlength="8" required></div>
+<label style="display:flex;gap:10px;font-size:13px;margin:0 0 16px;align-items:flex-start"><input id="ok" type="checkbox" required style="margin-top:3px;accent-color:var(--ms-accent)"><span>Я принимаю <a href="legal.html#terms" target="_blank">условия использования</a> и <a href="legal.html#privacy" target="_blank">политику конфиденциальности</a></span></label>
+<button class="ms-btn primary" style="width:100%;justify-content:center">Создать аккаунт</button></form>
+<form id="fNew" hidden><div class="ms-field"><label for="p4">Новый пароль</label><input id="p4" type="password" autocomplete="new-password" minlength="8" required></div><button class="ms-btn primary" style="width:100%;justify-content:center">Сохранить пароль</button></form>
+</div></div>
+<div class="r"><h2>С возвращением в «Молдавскую прослушку»</h2><p style="opacity:.85">Аккаунт нужен, чтобы сохранять материалы и открывать Premium.</p><ul><li>Избранное синхронизируется между устройствами</li><li>Статус подписки всегда под рукой</li><li>Никаких лишних данных — только почта</li></ul></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js"></script>
+<script>
+(async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;
+
+const $=id=>document.getElementById(id),msg=(t,k="err")=>{$("msg").innerHTML=t?`<div class="ms-msg ${k}">${esc(t)}</div>`:""};
+document.body.classList.add("ms-page");try{const d=localStorage.getItem("ms-theme");document.body.classList.toggle("dark",d?d==="dark":matchMedia("(prefers-color-scheme: dark)").matches)}catch(e){}
+const next=MS.safeNext()||"account.html";
+const show=m=>{$("fIn").hidden=m!=="in";$("fUp").hidden=m!=="up";$("fNew").hidden=m!=="new";$("tIn").classList.toggle("on",m==="in");$("tUp").classList.toggle("on",m==="up");msg("")};
+$("tIn").onclick=()=>show("in");$("tUp").onclick=()=>show("up");
+const params=new URLSearchParams(location.search);
+if(params.get("confirmed"))msg("Почта подтверждена. Теперь можно войти.","ok");
+if(st.user&&!location.hash.includes("type=recovery")){location.replace(next);return}
+sb.auth.onAuthStateChange(ev=>{if(ev==="PASSWORD_RECOVERY"){show("new");msg("Введите новый пароль.","ok")}});
+const human=e=>{const m=(e.message||"").toLowerCase();
+ if(m.includes("invalid login"))return"Неверная почта или пароль.";
+ if(m.includes("not confirmed"))return"Подтвердите почту: мы отправили вам письмо со ссылкой.";
+ if(m.includes("rate limit")||m.includes("too many"))return"Слишком много попыток. Подождите немного.";
+ if(m.includes("password"))return"Пароль слишком простой или короткий (минимум 8 символов).";
+ return"Не удалось выполнить действие. Попробуйте ещё раз."};
+$("fIn").onsubmit=async e=>{e.preventDefault();msg("");const b=e.target.querySelector("button");b.disabled=true;
+ const {error}=await sb.auth.signInWithPassword({email:$("e1").value.trim(),password:$("p1").value});b.disabled=false;
+ if(error)return msg(human(error));msg("Вы успешно вошли.","ok");setTimeout(()=>location.href=next,500)};
+$("fUp").onsubmit=async e=>{e.preventDefault();msg("");
+ if($("p2").value!==$("p3").value)return msg("Пароли не совпадают.");
+ const b=e.target.querySelector("button");b.disabled=true;
+ const {data,error}=await sb.auth.signUp({email:$("e2").value.trim(),password:$("p2").value,options:{emailRedirectTo:MS.BASE+"login.html?confirmed=1"}});b.disabled=false;
+ if(error)return msg(human(error));
+ if(data.user&&data.user.identities&&data.user.identities.length===0)return msg("Этот адрес уже зарегистрирован. Попробуйте войти или восстановить пароль.");
+ if(data.session){location.href=next;return}
+ msg("Мы отправили письмо со ссылкой для подтверждения. Перейдите по ней, затем войдите.","ok");e.target.reset()};
+$("forgot").onclick=async e=>{e.preventDefault();const em=$("e1").value.trim();if(!em)return msg("Введите почту в поле выше, затем нажмите «Забыли пароль?».");
+ const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:MS.BASE+"login.html"});
+ msg(error?human(error):"Если такой адрес зарегистрирован, мы отправили письмо со ссылкой для сброса пароля.",error?"err":"ok")};
+$("fNew").onsubmit=async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$("p4").value});
+ if(error)return msg(human(error));msg("Пароль изменён.","ok");setTimeout(()=>location.href="account.html",800)};
+
+})();
+</script></body></html>

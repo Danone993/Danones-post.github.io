@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Публикации — Молдавская прослушка</title><link rel="stylesheet" href="ms.css"></head>
+<body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app" aria-live="polite"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js"></script>
+<script>
+(async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;MS.header();const app=document.getElementById("app");
+
+const p=new URLSearchParams(location.search),slug=p.get("c")||"",q=(p.get("q")||"").trim().slice(0,80);
+const cats=await MS.categories(),cur=cats.find(c=>c.slug===slug);
+document.title=(cur?cur.name:q?"Поиск: "+q:"Все публикации")+" — Молдавская прослушка";
+let qy=sb.from("articles").select("id,slug,title,subtitle,cover_url,cover_alt,access,published_at,categories!inner(slug,name)").order("published_at",{ascending:false}).limit(60);
+if(cur)qy=qy.eq("category_id",cur.id);
+if(q){const t=q.replace(/[%,()*\\]/g," ");qy=qy.or(`title.ilike.%${t}%,subtitle.ilike.%${t}%`)}
+const {data,error}=await qy;
+const chips=`<div class="ms-chips"><a href="category.html"${!cur&&!q?' class="on"':""}>Все</a>${cats.map(c=>`<a href="category.html?c=${encodeURIComponent(c.slug)}"${cur&&cur.id===c.id?' class="on"':""}>${esc(c.name)}</a>`).join("")}</div>`;
+const head=cur?`<h1 class="ms-h1">${esc(cur.name)}</h1><p class="ms-lead">${esc(cur.description)}</p>`:q?`<h1 class="ms-h1">Поиск: «${esc(q)}»</h1>`:`<h1 class="ms-h1">Все публикации</h1>`;
+app.innerHTML=head+chips+(error?'<div class="ms-msg err">Не удалось загрузить публикации.</div>':data&&data.length?`<div class="ms-grid">${data.map(MS.cardHTML).join("")}</div>`:'<div class="ms-empty">Здесь пока нет публикаций.</div>');
+
+})();
+</script></body></html>

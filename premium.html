@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Premium — Молдавская прослушка</title><link rel="stylesheet" href="ms.css"></head>
+<body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app" aria-live="polite"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js"></script>
+<script>
+(async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;MS.header();const app=document.getElementById("app");
+
+const act=MS.isPremium();
+app.innerHTML=`<h1 class="ms-h1">Premium</h1><p class="ms-lead">Медицинские материалы выходят еженедельно и бесплатны для всех. Premium открывает дополнительные публикации в других разделах.</p>
+<div class="ms-plans">
+<section class="ms-plan"><h3>Бесплатно</h3><p style="color:var(--ms-muted);margin:0">Для всех читателей</p><ul><li>Все бесплатные материалы</li><li>Неограниченное чтение медицинских публикаций</li><li>Медицинский архив</li><li>Избранное</li></ul>${st.user?"":'<a class="ms-btn" href="login.html">Создать аккаунт</a>'}</section>
+<section class="ms-plan hi"><span class="ms-tag">Рекомендуем</span><h3>Premium</h3><p style="color:var(--ms-muted);margin:0">Новые материалы каждый день</p><ul><li>Всё из бесплатного тарифа</li><li>Дополнительные публикации во всех разделах</li><li>Весь Premium-архив</li><li>Новые Premium-материалы ежедневно</li></ul>${act?`<div class="ms-msg ok">Premium активен до ${fmtDate(st.premiumUntil)}</div>`:'<a class="ms-btn primary" href="#promo">Активировать промокод</a>'}</section></div>
+<section class="ms-panel" id="promo" style="max-width:520px"><h2 style="margin-top:0">Промокод</h2><p class="ms-lead" style="margin-bottom:14px">Введите промокод, чтобы открыть Premium. Оплата пока не подключена.</p><div id="pm"></div>
+<form id="pf" class="ms-row"><input id="pc" type="text" placeholder="Промокод" autocomplete="off" maxlength="64" style="flex:1;min-width:160px;font:inherit;padding:12px 14px;border:1px solid var(--ms-border);border-radius:12px;background:var(--ms-card);color:var(--ms-text);text-transform:uppercase"><button class="ms-btn primary">Активировать</button></form></section>`;
+document.getElementById("pf").addEventListener("submit",async e=>{e.preventDefault();
+if(!st.user){location.href=MS.loginUrl();return}
+const m=document.getElementById("pm"),b=e.target.querySelector("button");b.disabled=true;m.innerHTML="";
+try{const r=await MS.activatePromo(document.getElementById("pc").value);await MS.refresh();m.innerHTML=`<div class="ms-msg ok">Готово! Premium активен до ${esc(fmtDate(r.premium_until))}.</div>`}
+catch(err){m.innerHTML=`<div class="ms-msg err">${esc(err.message)}</div>`}finally{b.disabled=false}});
+
+})();
+</script></body></html>
