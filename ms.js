@@ -109,7 +109,7 @@
     const el = document.getElementById("ms-header"); if (!el) return;
     el.className = "ms-top";
     el.innerHTML = `<div class="ms-top-in"><button class="ms-ibtn" id="ms-menu" aria-label="Открыть меню" aria-expanded="false">☰</button>
-      <a class="ms-brand" href="index.html">Молдавская <span>прослушка</span></a>
+      <a class="ms-brand" href="index.html"><img class="ms-logo ms-logo-l" src="logo-light.png" alt=""><img class="ms-logo ms-logo-d" src="logo-dark.png" alt=""><span>Молдавская <span>прослушка</span></span></a>
       <form class="ms-search" action="category.html" role="search"><input name="q" type="search" placeholder="Поиск" aria-label="Поиск"></form>
       <button class="ms-ibtn" id="ms-theme" aria-label="Переключить тему">🌙</button>
       <a class="ms-btn" id="ms-acc" href="${st.user ? "account.html" : "login.html"}">${accountLabel()}</a></div>`;
