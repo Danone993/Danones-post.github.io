@@ -39,7 +39,7 @@ const human=e=>{const m=(e.message||"").toLowerCase();
  return"Не удалось выполнить действие. Попробуйте ещё раз."};
 $("fIn").onsubmit=async e=>{e.preventDefault();msg("");const b=e.target.querySelector("button");b.disabled=true;
  const {error}=await sb.auth.signInWithPassword({email:$("e1").value.trim(),password:$("p1").value});b.disabled=false;
- if(error)return msg(human(error));msg("Вы успешно вошли.","ok");setTimeout(()=>location.href=next,500)};
+ if(error)return msg(human(error));msg("Вы успешно вошли.","ok");await MS.refresh();await MS.track("login");setTimeout(()=>location.href=next,300)};
 $("fUp").onsubmit=async e=>{e.preventDefault();msg("");
  if($("p2").value!==$("p3").value)return msg("Пароли не совпадают.");
  const b=e.target.querySelector("button");b.disabled=true;

@@ -134,8 +134,21 @@
     return data;
   }
 
+  async function track(kind) {
+    try {
+      if (!st.session) return;
+      await fetch(`${SB_URL}/functions/v1/track-login`, { method: "POST", headers: { apikey: SB_KEY, Authorization: "Bearer " + st.session.access_token, "Content-Type": "application/json" }, body: JSON.stringify({ kind }) });
+    } catch (e) { /* статистика не должна ломать сайт */ }
+  }
+  function trackVisit() {
+    try {
+      const last = Number(localStorage.getItem("ms-visit") || 0);
+      if (st.user && Date.now() - last > 20 * 60 * 1000) { localStorage.setItem("ms-visit", String(Date.now())); track("visit"); }
+    } catch (e) {}
+  }
+
   sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" || ev === "SIGNED_OUT" || ev === "TOKEN_REFRESHED") setTimeout(async () => { await refresh(); const a = document.getElementById("ms-acc"); if (a) { a.textContent = accountLabel(); a.href = st.user ? "account.html" : "login.html"; } }, 0); });
 
   window.MS = { sb, st, BASE, esc, fmtDate, isPremium, refresh, categories, toast, safeNext, loginUrl, cardHTML, bookmarkBtn, header, openDrawer, closeDrawer, fetchArticle, activatePromo, ICON_BM,
-    ready: refresh() };
+    ready: refresh().then(s => { trackVisit(); return s; }), track };
 })();
