@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Админка контента — Молдавская прослушка</title><meta name="robots" content="noindex"><link rel="stylesheet" href="ms.css"><link rel="icon" type="image/png" href="favicon.png"></head>
+<body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js"></script>
+<script>
+(async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;
+MS.header();
+const T={а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya"};
+const slugify=s=>s.toLowerCase().split("").map(c=>T[c]??c).join("").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,80);
+const inp=(id,label,val="",type="text",extra="")=>`<div class="ms-field"><label for="${id}">${label}</label><input id="${id}" type="${type}" value="${esc(val)}" ${extra}></div>`;
+const note=(t,k="ok")=>{document.getElementById("note").innerHTML=t?`<div class="ms-msg ${k}">${esc(t)}</div>`:""};
+if(!st.user){location.replace(MS.loginUrl());return}
+const {data:isAdm}=await sb.rpc("is_admin");
+if(!isAdm){app.innerHTML='<div class="ms-empty"><p><b>Нет доступа</b></p><p>Эта страница только для администратора.</p></div>';return}
+let tab="a";
+app.innerHTML='<h1 class="ms-h1">Админка контента</h1><div class="ms-tabs" style="max-width:560px"><button id="ta" class="on">Публикации</button><button id="tc">Категории</button><button id="ts">Статистика</button></div><div id="note"></div><div id="view"></div>';
+const v=document.getElementById("view");
+document.getElementById("ta").onclick=()=>{tab="a";sw();listA()};document.getElementById("tc").onclick=()=>{tab="c";sw();listC()};document.getElementById("ts").onclick=()=>{tab="s";sw();listS()};
+const sw=()=>{document.getElementById("ta").classList.toggle("on",tab==="a");document.getElementById("tc").classList.toggle("on",tab==="c");document.getElementById("ts").classList.toggle("on",tab==="s");note("")};
+
+async function listA(){
+ const {data,error}=await sb.from("articles").select("id,title,slug,access,status,published_at,categories(name)").order("created_at",{ascending:false});
+ if(error)return note("Ошибка загрузки: "+error.message,"err");
+ v.innerHTML=`<p><button class="ms-btn primary" id="new">+ Новая публикация</button></p><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--ms-muted)"><th>Заголовок</th><th>Категория</th><th>Доступ</th><th>Статус</th><th></th></tr>${(data||[]).map(a=>`<tr style="border-top:1px solid var(--ms-border)"><td style="padding:10px 6px">${esc(a.title)}</td><td>${esc(a.categories?.name||"")}</td><td>${a.access==="premium"?"★ Premium":"Бесплатно"}</td><td>${a.status==="published"?"Опубликовано":"Черновик"}</td><td style="white-space:nowrap"><button class="ms-btn" data-e="${a.id}">Изменить</button> <button class="ms-btn" data-d="${a.id}">Удалить</button></td></tr>`).join("")||'<tr><td colspan="5" style="padding:20px;color:var(--ms-muted)">Пока пусто</td></tr>'}</table></div>`;
+ document.getElementById("new").onclick=()=>formA();
+ v.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>formA(b.dataset.e));
+ v.querySelectorAll("[data-d]").forEach(b=>b.onclick=async()=>{if(!confirm("Удалить публикацию вместе с текстом и записями в избранном?"))return;const {error}=await sb.from("articles").delete().eq("id",b.dataset.d);note(error?error.message:"Удалено",error?"err":"ok");listA()});
+}
+async function formA(id){
+ const cats=await MS.categories();let a={access:"free",status:"draft",category_id:cats[0]?.id},body="";
+ if(id){const [x,y]=await Promise.all([sb.from("articles").select("*").eq("id",id).single(),sb.from("article_bodies").select("body_html").eq("article_id",id).maybeSingle()]);a=x.data;body=y.data?.body_html||""}
+ v.innerHTML=`<form class="ms-panel" id="f" style="max-width:820px">${inp("title","Заголовок",a.title||"","text","required")}${inp("slug","Адрес (латиницей, формируется из заголовка)",a.slug||"","text",'pattern="[a-z0-9]+(-[a-z0-9]+)*" required')}
+ <div class="ms-field"><label for="cat">Категория</label><select id="cat">${cats.map(c=>`<option value="${c.id}"${c.id===a.category_id?" selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
+ ${inp("sub","Подзаголовок / краткое описание",a.subtitle||"")}
+ <div class="ms-row"><div class="ms-field" style="flex:1"><label for="acc">Доступ (задаётся разделом: Медицина — бесплатно, остальное — Premium)</label><select id="acc" disabled><option value="free"${a.access==="free"?" selected":""}>Бесплатно</option><option value="premium"${a.access==="premium"?" selected":""}>Premium</option></select></div><div class="ms-field" style="flex:1"><label for="stt">Статус</label><select id="stt"><option value="draft"${a.status==="draft"?" selected":""}>Черновик</option><option value="published"${a.status==="published"?" selected":""}>Опубликовано</option></select></div></div>
+ ${inp("cov","Обложка (ссылка)",a.cover_url||"","url")}<div class="ms-field"><label for="file">…или загрузить файл</label><input id="file" type="file" accept="image/*"></div>${inp("alt","Описание обложки (alt)",a.cover_alt||"")}
+ <div class="ms-field"><label for="prev">Ознакомительный фрагмент (виден всем, HTML)</label><textarea id="prev" rows="4">${esc(a.preview_html||"")}</textarea></div>
+ <div class="ms-field"><label for="body">Полный текст (HTML). У Premium-статей отдаётся только подписчикам</label><textarea id="body" rows="16">${esc(body)}</textarea></div>
+ <div class="ms-row" style="margin:-6px 0 14px"><button type="button" class="ms-btn" id="ins">🖼 Вставить фото в текст</button><input id="insf" type="file" accept="image/*" hidden><span id="inss" style="font-size:12px;color:var(--ms-muted)"></span></div>
+ ${inp("st","SEO-заголовок",a.seo_title||"")}${inp("sd","SEO-описание",a.seo_description||"")}
+ <div class="ms-row"><button class="ms-btn primary">Сохранить</button><button type="button" class="ms-btn" id="cancel">Отмена</button></div></form>`;
+ const f=document.getElementById("f"),$=i=>document.getElementById(i);
+ if(!id)$("title").addEventListener("input",()=>{$("slug").value=slugify($("title").value)});
+ $("cancel").onclick=listA;
+ $("ins").onclick=()=>$("insf").click();
+ $("insf").onchange=async()=>{const file=$("insf").files[0];if(!file)return;
+  const alt=prompt("Описание фото (для доступности), можно оставить пустым")||"";$("inss").textContent="Загрузка…";
+  const path="body-"+Date.now()+"-"+slugify(file.name.replace(/\.[^.]+$/,""))+"."+(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const up=await sb.storage.from("covers").upload(path,file,{contentType:file.type});
+  if(up.error){$("inss").textContent="";return note("Не удалось загрузить фото: "+up.error.message,"err")}
+  const url=sb.storage.from("covers").getPublicUrl(path).data.publicUrl,t=$("body"),pos=t.selectionStart??t.value.length;
+  t.value=t.value.slice(0,pos)+"\n<img src=\""+url+"\" alt=\""+alt.replace(/"/g,"&quot;")+"\">\n"+t.value.slice(pos);
+  $("insf").value="";$("inss").textContent="Фото вставлено в место курсора";};
+ f.onsubmit=async e=>{e.preventDefault();const btn=f.querySelector("button");btn.disabled=true;note("");
+  let cover=$("cov").value.trim()||null;const file=$("file").files[0];
+  if(file){const path=Date.now()+"-"+slugify(file.name.replace(/\.[^.]+$/,""))+"."+(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+   const up=await sb.storage.from("covers").upload(path,file,{contentType:file.type});if(up.error){btn.disabled=false;return note("Не удалось загрузить обложку: "+up.error.message,"err")}
+   cover=sb.storage.from("covers").getPublicUrl(path).data.publicUrl}
+  const row={title:$("title").value.trim(),slug:$("slug").value.trim(),category_id:$("cat").value,subtitle:$("sub").value.trim(),access:$("acc").value,status:$("stt").value,cover_url:cover,cover_alt:$("alt").value.trim(),preview_html:$("prev").value,seo_title:$("st").value.trim(),seo_description:$("sd").value.trim()};
+  const r=id?await sb.from("articles").update(row).eq("id",id).select("id").single():await sb.from("articles").insert(row).select("id").single();
+  if(r.error){btn.disabled=false;return note("Ошибка: "+r.error.message,"err")}
+  const b=await sb.from("article_bodies").upsert({article_id:r.data.id,body_html:$("body").value});
+  btn.disabled=false;if(b.error)return note("Статья сохранена, но текст — нет: "+b.error.message,"err");
+  note("Сохранено");listA()};
+}
+async function listC(){
+ const {data,error}=await sb.from("categories").select("*").order("sort_order").order("name");
+ if(error)return note(error.message,"err");
+ v.innerHTML=`<form class="ms-panel" id="cf" style="max-width:620px;margin-bottom:22px"><h3 style="margin-top:0">Новая категория</h3>${inp("cn","Название","","text","required")}${inp("cs","Адрес (латиницей)","","text",'pattern="[a-z0-9]+(-[a-z0-9]+)*" required')}${inp("cd","Описание")}${inp("co","Порядок в меню","100","number")}<button class="ms-btn primary">Добавить</button></form>
+ <div class="ms-panel" style="max-width:620px">${data.map(c=>`<div class="ms-row" style="padding:8px 0;border-top:1px solid var(--ms-border)"><span style="flex:1"><b>${esc(c.name)}</b> <span style="color:var(--ms-muted)">/${esc(c.slug)} · ${c.sort_order}</span></span><button class="ms-btn" data-r="${c.id}">Переименовать</button><button class="ms-btn" data-x="${c.id}">Удалить</button></div>`).join("")}</div>`;
+ const $=i=>document.getElementById(i);
+ $("cn").addEventListener("input",()=>{$("cs").value=slugify($("cn").value)});
+ $("cf").onsubmit=async e=>{e.preventDefault();const {error}=await sb.from("categories").insert({name:$("cn").value.trim(),slug:$("cs").value.trim(),description:$("cd").value.trim(),sort_order:+$("co").value||100});
+  note(error?error.message:"Категория добавлена и уже появилась в меню",error?"err":"ok");if(!error)listC()};
+ v.querySelectorAll("[data-r]").forEach(b=>b.onclick=async()=>{const n=prompt("Новое название");if(!n)return;const {error}=await sb.from("categories").update({name:n.trim()}).eq("id",b.dataset.r);note(error?error.message:"Сохранено",error?"err":"ok");listC()});
+ v.querySelectorAll("[data-x]").forEach(b=>b.onclick=async()=>{if(!confirm("Удалить категорию?"))return;const {error}=await sb.from("categories").delete().eq("id",b.dataset.x);note(error?"Нельзя удалить: в категории есть публикации.":"Удалено",error?"err":"ok");listC()});
+}
+async function listS(){
+ v.innerHTML='<p style="color:var(--ms-muted)">Загрузка…</p>';
+ let d;try{const r=await fetch(sb.supabaseUrl+"/functions/v1/admin-stats",{headers:{apikey:sb.supabaseKey,Authorization:"Bearer "+st.session.access_token}});d=await r.json();if(!d.ok)throw new Error(d.error||r.status)}catch(e){v.innerHTML="";return note("Не удалось загрузить статистику: "+e.message,"err")}
+ const S=d.summary,now=Date.now(),fd=x=>x?new Date(x).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}):"—";
+ const isP=u=>u.premium_until&&new Date(u.premium_until)>now;
+ const card=(n,l)=>`<div class="ms-panel" style="padding:14px;min-width:120px;flex:1"><div style="font-size:26px;font-weight:850">${n}</div><div style="color:var(--ms-muted);font-size:12px">${l}</div></div>`;
+ let filt="all",q="";
+ v.innerHTML=`<div class="ms-row" style="gap:10px;margin-bottom:16px">${card(S.total,"всего аккаунтов")}${card(S.premium,"с активным Premium")}${card(S.total-S.premium,"без Premium")}${card(S.active7,"активны за 7 дней")}${card(S.new7+" / "+S.new30,"новых за 7 / 30 дней")}${card(S.stars+" ⭐","оплачено звёздами")}${card(S.promo,"активаций промокода")}</div>
+ <div class="ms-row" style="margin-bottom:12px"><div class="ms-chips" style="margin:0" id="fl"><a href="#" data-f="all" class="on">Все</a><a href="#" data-f="p">Premium</a><a href="#" data-f="f">Без Premium</a></div><input id="sq" type="text" placeholder="Поиск по почте" style="font:inherit;padding:9px 12px;border:1px solid var(--ms-border);border-radius:12px;background:var(--ms-card);color:var(--ms-text);flex:1;min-width:160px"><button class="ms-btn" id="csv">Скачать CSV</button></div>
+ <p style="color:var(--ms-muted);font-size:12px;margin:0 0 10px">IP и устройство записываются начиная с момента включения этой функции. Для более ранних входов известна только дата последнего входа.</p>
+ <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px" id="tb"></table></div>`;
+ const rows=()=>d.users.filter(u=>(filt==="all"||(filt==="p"?isP(u):!isP(u)))&&(!q||(u.email||"").toLowerCase().includes(q)));
+ const draw=()=>{const R=rows();document.getElementById("tb").innerHTML=`<tr style="text-align:left;color:var(--ms-muted)"><th>Почта</th><th>Регистрация</th><th>Последний вход</th><th>Последний IP</th><th>Premium</th><th>⭐</th><th>Избр.</th><th>История</th></tr>`+(R.map(u=>`<tr style="border-top:1px solid var(--ms-border);vertical-align:top"><td style="padding:8px 6px;word-break:break-all">${esc(u.email)}${u.confirmed?"":' <span class="ms-tag">не подтверждена</span>'}</td><td>${fd(u.created_at)}</td><td>${fd(u.last_sign_in_at)}</td><td>${esc(u.last_ip||"—")}</td><td>${isP(u)?"★ до "+fd(u.premium_until).slice(0,10)+(u.source?" ("+esc(u.source)+")":""):(u.premium_until?"истёк "+fd(u.premium_until).slice(0,10):"—")}</td><td>${u.stars||0}</td><td>${u.favorites}</td><td>${u.events.length?`<details><summary>${u.events.length}</summary>${u.events.map(e=>`<div style="margin:4px 0;white-space:nowrap">${fd(e.at)} · ${e.kind==="login"?"вход":"визит"} · ${esc(e.ip||"?")}<br><span style="color:var(--ms-muted);font-size:11px">${esc((e.ua||"").slice(0,80))}</span></div>`).join("")}</details>`:"—"}</td></tr>`).join("")||'<tr><td colspan="8" style="padding:20px;color:var(--ms-muted)">Никого не найдено</td></tr>');};
+ draw();
+ document.getElementById("sq").oninput=e=>{q=e.target.value.trim().toLowerCase();draw()};
+ document.getElementById("fl").onclick=e=>{const a=e.target.closest("a");if(!a)return;e.preventDefault();filt=a.dataset.f;document.querySelectorAll("#fl a").forEach(x=>x.classList.toggle("on",x===a));draw()};
+ document.getElementById("csv").onclick=()=>{const c=s=>'"'+String(s??"").replace(/"/g,'""')+'"';const L=[["email","регистрация","последний вход","последний IP","premium до","источник","звёзды","избранное"].map(c).join(",")].concat(rows().map(u=>[u.email,u.created_at,u.last_sign_in_at,u.last_ip,u.premium_until,u.source,u.stars,u.favorites].map(c).join(",")));const b=new Blob(["\ufeff"+L.join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="users.csv";a.click()};
+ drawAnon(d.anon||{summary:{},rows:[]});
+}
+
+function drawAnon(A){
+ const S=A.summary||{},fd=x=>x?new Date(x).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
+ const card=(n,l)=>`<div class="ms-panel" style="padding:14px;min-width:120px;flex:1"><div style="font-size:26px;font-weight:850">${n??0}</div><div style="color:var(--ms-muted);font-size:12px">${l}</div></div>`;
+ let hide=true,q="";
+ v.insertAdjacentHTML("beforeend",`<h2 style="margin-top:36px">Читатели без аккаунта (по IP)</h2>
+ <div class="ms-row" style="gap:10px;margin-bottom:14px">${card(S.today,"уникальных IP сегодня")}${card(S.d7,"за 7 дней")}${card(S.d30,"за 30 дней")}${card(S.hits7,"заходов за 7 дней")}${card(S.bots7,"ботов за 7 дней")}</div>
+ <div class="ms-row" style="margin-bottom:12px"><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="hb" checked> скрыть ботов</label><input id="aq" type="text" placeholder="Поиск по IP" style="font:inherit;padding:9px 12px;border:1px solid var(--ms-border);border-radius:12px;background:var(--ms-card);color:var(--ms-text);flex:1;min-width:140px"><button class="ms-btn" id="acsv">Скачать CSV</button></div>
+ <p style="color:var(--ms-muted);font-size:12px;margin:0 0 10px">Один IP может быть несколькими людьми (общий Wi‑Fi, мобильная сеть). Записи хранятся 90 дней, показаны последние 30 дней, до 300 адресов.</p>
+ <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px" id="at"></table></div>`);
+ const rows=()=>(A.rows||[]).filter(r=>(!hide||!r.bot)&&(!q||(r.ip||"").includes(q)));
+ const draw=()=>{const R=rows();document.getElementById("at").innerHTML='<tr style="text-align:left;color:var(--ms-muted)"><th>IP</th><th>Первый заход</th><th>Последний</th><th>Дней</th><th>Заходов</th><th>Страница</th><th>Откуда</th><th>Устройство</th></tr>'+(R.map(r=>`<tr style="border-top:1px solid var(--ms-border);vertical-align:top"><td style="padding:8px 6px;white-space:nowrap">${esc(r.ip)}${r.bot?' <span class="ms-tag">бот</span>':""}</td><td>${fd(r.first_seen)}</td><td>${fd(r.last_seen)}</td><td>${r.days}</td><td>${r.hits}</td><td>${esc(r.page||"—")}</td><td>${esc(r.ref||"прямой")}</td><td style="color:var(--ms-muted);font-size:11px">${esc((r.ua||"").slice(0,70))}</td></tr>`).join("")||'<tr><td colspan="8" style="padding:20px;color:var(--ms-muted)">Пока данных нет: они появятся после первых заходов читателей</td></tr>');};
+ draw();
+ document.getElementById("hb").onchange=e=>{hide=e.target.checked;draw()};
+ document.getElementById("aq").oninput=e=>{q=e.target.value.trim();draw()};
+ document.getElementById("acsv").onclick=()=>{const c=s=>'"'+String(s??"").replace(/"/g,'""')+'"';const L=[["ip","первый заход","последний заход","дней","заходов","страница","откуда","устройство","бот"].map(c).join(",")].concat(rows().map(r=>[r.ip,r.first_seen,r.last_seen,r.days,r.hits,r.page,r.ref,r.ua,r.bot].map(c).join(",")));const b=new Blob(["\ufeff"+L.join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="visitors.csv";a.click()};
+}
+
+listA();
+})();
+</script></body></html>
