@@ -24,9 +24,10 @@ nav button{flex:1;background:none;color:var(--mu);border-radius:0;font-size:12px
 .body{font-size:18px;line-height:1.75}.body img{max-width:100%;height:auto;border-radius:12px}.body p{margin:0 0 1em}
 .msg{padding:10px 14px;border-radius:12px;background:var(--soft);margin:0 0 10px}.empty{text-align:center;color:var(--mu);padding:30px 10px}
 .bar{position:fixed;top:env(safe-area-inset-top);left:0;height:3px;background:var(--ac);width:0;z-index:20}
-</style></head><body><div class="bar" id="bar"></div><main id="v"></main>
+</style></head><body><div class="bar" id="bar"></div><main id="v"><div class="empty">Загрузка…</div></main>
 <nav id="nav"></nav>
 <script>
+addEventListener("error",e=>{const m=document.getElementById("v");if(m&&/Загрузка/.test(m.textContent))m.innerHTML='<div class="card">Ошибка: '+String(e.message||e).replace(/</g,"&lt;")+'</div>'});
 const SB="https://zfjkwdmfhbyohdmqogvp.supabase.co",KEY="sb_publishable_tMdL5NeAF9g2ikjt_LFNSg_wzvDm37e",PAY="https://bjyfhovdoxhxfsmspsia.supabase.co/functions/v1/create-premium-invoice",BOT="https://t.me/moldavskayproslyshka_bot",SITE=new URL("./",location.href).href;
 const sb=supabase.createClient(SB,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=s=>document.querySelector(s),v=$("#v");
@@ -51,7 +52,7 @@ function go(h){location.hash=h}
 async function route(){
  const h=location.hash.slice(1)||"home";$("#bar").style.width="0";window.onscroll=null;
  if(h.startsWith("a:")){S.tab="read";nav();return article(h.slice(2))}
- S.tab=h;nav();({home,read,games,top,me}[h]||home)();window.scrollTo(0,0)}
+ S.tab=h;nav();({home,read,games,top:rating,me}[h]||home)();window.scrollTo(0,0)}
 function home(){
  const hist=LS.g("hist",[]),cont=hist.map(x=>S.arts.find(a=>a.slug===x.slug&&x.pos>3&&x.pos<97)).find(Boolean);
  const fav=S.arts.filter(a=>S.favs.has(a.id)).map(a=>a.categories?.slug),pref=a=>fav.includes(a.categories?.slug)&&!S.favs.has(a.id);
@@ -87,7 +88,7 @@ async function article(slug){
 function games(){v.innerHTML=`<h1>Игры</h1><p class="mu">Игры сейчас работают в Telegram-боте: очки и рейтинг считает сервер.</p>
  ${[["⚡","Испытание дня","Одна попытка в сутки, серия дней"],["🎮","Факт или заблуждение","10 раундов в сутки"],["🧠","Обмани свой мозг","10 раундов в сутки"],["🧩","Ассоциации","До 3 подсказок, чем раньше — тем больше очков"]].map(([i,t,d])=>`<div class="card"><b>${i} ${t}</b><br><small class="mu">${d}</small></div>`).join("")}
  <a class="btn" href="${BOT}" target="_blank" rel="noopener">Играть в боте</a> <a class="btn g" href="${SITE}quiz.html">Тест на сайте</a>`}
-function top(){v.innerHTML=`<h1>Рейтинг</h1><div class="card">Рейтинг игроков пока ведётся в боте: кнопка «🏆 Рейтинг» в меню. Общий рейтинг в приложении появится после привязки Telegram к профилю.</div><a class="btn" href="${BOT}" target="_blank" rel="noopener">Открыть рейтинг в боте</a>`}
+function rating(){v.innerHTML=`<h1>Рейтинг</h1><div class="card">Рейтинг игроков пока ведётся в боте: кнопка «🏆 Рейтинг» в меню. Общий рейтинг в приложении появится после привязки Telegram к профилю.</div><a class="btn" href="${BOT}" target="_blank" rel="noopener">Открыть рейтинг в боте</a>`}
 function me(){
  if(!S.user){v.innerHTML=`<h1>Вход</h1><div class="card"><input id="e" type="email" placeholder="Почта" autocomplete="email"><input id="p" type="password" placeholder="Пароль" autocomplete="current-password"><div id="m"></div><button id="in">Войти</button> <button class="g" id="up">Регистрация</button><p class="mu" style="margin:12px 0 0">Тот же аккаунт, что и на сайте.</p></div>`;
   const msg=t=>$("#m").innerHTML=`<div class="msg">${esc(t)}</div>`;
