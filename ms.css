@@ -98,3 +98,5 @@ body.dark .ms-msg.err{background:#3a1f1c;color:#ff9c91}body.dark .ms-msg.ok{back
 .ms-prose table{border-collapse:collapse;display:block;overflow-x:auto;max-width:100%}.ms-prose td,.ms-prose th{border:1px solid var(--ms-border);padding:8px 10px}
 .ms-prose hr{border:0;border-top:1px solid var(--ms-border);margin:2em 0}
 .ms-prose ul,.ms-prose ol{padding-left:1.3em}.ms-prose li{margin:.5em 0}
+
+.ms-rec-h{margin:18px 0 12px}.ms-why{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--ms-muted);margin:6px 4px 14px}.ms-why button{background:none;border:0;color:var(--ms-muted);text-decoration:underline;cursor:pointer;font:inherit;padding:6px;min-height:32px}

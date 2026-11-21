@@ -49,7 +49,7 @@
   function cardHTML(a) {
     const cat = a.categories || {};
     const cover = a.cover_url ? `<img class="ms-cover" loading="lazy" src="${esc(a.cover_url)}" alt="${esc(a.cover_alt || "")}">` : '<div class="ms-cover" role="img" aria-label=""></div>';
-    return `<article class="ms-card">${bookmarkBtn(a.id)}${cover}<div class="ms-card-b">
+    return `<article class="ms-card" data-slug="${esc(a.slug)}" data-cat="${esc(cat.slug || "")}">${bookmarkBtn(a.id)}${cover}<div class="ms-card-b">
       <div><span class="ms-tag">${esc(cat.name || "")}</span></div>
       <h3><a href="${a.source_url ? esc(a.source_url) : "article.html?a=" + encodeURIComponent(a.slug)}">${esc(a.title)}</a></h3>
       ${a.subtitle ? `<p>${esc(a.subtitle)}</p>` : ""}
@@ -158,6 +158,60 @@
 
   sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" || ev === "SIGNED_OUT" || ev === "TOKEN_REFRESHED") setTimeout(async () => { await refresh(); const a = document.getElementById("ms-acc"); if (a) { a.textContent = accountLabel(); a.href = st.user ? "account.html" : "login.html"; } }, 0); });
 
-  window.MS = { sb, st, BASE, esc, fmtDate, isPremium, refresh, categories, toast, safeNext, loginUrl, cardHTML, bookmarkBtn, header, openDrawer, closeDrawer, fetchArticle, activatePromo, ICON_BM,
+
+  /* ---- Подбор публикаций ----
+     Прозрачная логика: балл = интерес к теме (избранное ×3, прочитанное ×1.5 с затуханием 30 дней, максимум 8)
+     + свежесть (половина балла каждые 30 дней) + небольшой бонус за материал, который читатель может открыть.
+     Исключаются избранное, прочитанное и скрытое («Не интересно»). Не больше 3 материалов из одной темы. */
+  const LSG = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const LSS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  function noteRead(slug, cat) {
+    if (!slug) return;
+    const r = LSG("ms-reads", []).filter(x => x.s !== slug);
+    r.unshift({ s: slug, c: cat || "", t: Date.now() });
+    LSS("ms-reads", r.slice(0, 100));
+  }
+  function hideRec(slug) { const h = LSG("ms-hide", []); if (!h.includes(slug)) { h.push(slug); LSS("ms-hide", h.slice(-200)); } }
+  function rankRecs(arts, o) {
+    const now = o.now || Date.now(), reads = o.reads || [], hide = new Set(o.hide || []), favs = o.favs || new Set();
+    const readSlugs = new Set(reads.map(r => r.s)), w = {};
+    arts.forEach(a => { if (favs.has(a.id)) { const c = a.categories && a.categories.slug; if (c) w[c] = (w[c] || 0) + 3; } });
+    reads.forEach(r => { if (r.c) w[r.c] = (w[r.c] || 0) + 1.5 * Math.pow(0.5, (now - r.t) / 864e5 / 30); });
+    const signals = Object.keys(w).length > 0;
+    const list = arts
+      .filter(a => !favs.has(a.id) && !readSlugs.has(a.slug) && !hide.has(a.slug) && (!a.published_at || new Date(a.published_at).getTime() <= now))
+      .map(a => {
+        const c = a.categories && a.categories.slug, aff = Math.min(w[c] || 0, 8);
+        const age = a.published_at ? Math.max(0, (now - new Date(a.published_at).getTime()) / 864e5) : 365;
+        const score = aff + 2 * Math.pow(0.5, age / 30) + (a.access === "free" || o.premium ? 0.4 : 0);
+        return { a, score, why: aff > 0 ? "Вам интересна тема «" + ((a.categories && a.categories.name) || "") + "»" : "Новое на сайте" };
+      })
+      .sort((x, y) => y.score - x.score || String(y.a.published_at).localeCompare(String(x.a.published_at)));
+    const per = {}, out = [];
+    for (const it of list) {
+      const c = (it.a.categories && it.a.categories.slug) || "";
+      if ((per[c] || 0) >= 3) continue;
+      per[c] = (per[c] || 0) + 1; out.push(it);
+      if (out.length >= (o.n || 6)) break;
+    }
+    return { items: out, personal: signals };
+  }
+  async function renderRecs(el, n) {
+    if (!el) return;
+    const { data } = await sb.from("articles").select("id,slug,title,subtitle,cover_url,cover_alt,access,source_url,published_at,categories(slug,name)").eq("status", "published").order("published_at", { ascending: false }).limit(80);
+    const r = rankRecs(data || [], { reads: LSG("ms-reads", []), hide: LSG("ms-hide", []), favs: st.favs, premium: isPremium(), n: n || 6 });
+    if (!r.items.length) { el.innerHTML = ""; return; }
+    el.innerHTML = `<h2 class="ms-rec-h">${r.personal ? "Подобрано для вас" : "Новое на сайте"}</h2>
+      <div class="ms-grid">${r.items.map(i => `<div class="ms-rec">${cardHTML(i.a)}<div class="ms-why"><span>${esc(i.why)}</span><button type="button" data-hide="${esc(i.a.slug)}">Не интересно</button></div></div>`).join("")}</div>
+      ${(LSG("ms-hide", []).length || LSG("ms-reads", []).length) ? '<p class="ms-why"><button type="button" data-reset-recs>Сбросить подбор</button></p>' : ""}`;
+  }
+  document.addEventListener("click", e => {
+    const h = e.target.closest("[data-hide]");
+    if (h) { e.preventDefault(); hideRec(h.dataset.hide); const box = h.closest(".ms-rec"); const host = box && box.closest("[id]"); if (box) box.remove(); toast("Скрыто. Подбор это учтёт."); return; }
+    if (e.target.closest("[data-reset-recs]")) { LSS("ms-hide", []); LSS("ms-reads", []); const host = document.getElementById("rec"); renderRecs(host); toast("Подбор сброшен"); return; }
+    const a = e.target.closest(".ms-card a"); if (a) { const c = a.closest(".ms-card"); noteRead(c.dataset.slug, c.dataset.cat); }
+  });
+
+  window.MS = { sb, st, BASE, esc, fmtDate, isPremium, refresh, categories, toast, safeNext, loginUrl, cardHTML, bookmarkBtn, header, openDrawer, closeDrawer, fetchArticle, activatePromo, ICON_BM, noteRead, rankRecs, renderRecs,
     ready: refresh().then(s => { trackVisit(); if (!s.user) trackAnon(); return s; }), track };
 })();
