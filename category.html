@@ -18,7 +18,6 @@ const {data,error}=await qy;
 const chips=`<div class="ms-chips"><a href="category.html"${!cur&&!q?' class="on"':""}>Все</a>${cats.map(c=>`<a href="${c.link_url?esc(c.link_url):"category.html?c="+encodeURIComponent(c.slug)}"${cur&&cur.id===c.id?' class="on"':""}>${esc(c.name)}</a>`).join("")}</div>`;
 const head=cur?`<h1 class="ms-h1">${esc(cur.name)}</h1><p class="ms-lead">${esc(cur.description)}</p>`:q?`<h1 class="ms-h1">Поиск: «${esc(q)}»</h1>`:`<h1 class="ms-h1">Все публикации</h1>`;
 app.innerHTML=head+chips+(error?'<div class="ms-msg err">Не удалось загрузить публикации.</div>':data&&data.length?`<div class="ms-grid">${data.map(MS.cardHTML).join("")}</div>`:'<div class="ms-empty">Здесь пока нет публикаций.</div>');
-if(!cur&&!q){const ch=app.querySelector(".ms-chips");if(ch){const sec=document.createElement("section");sec.id="rec";ch.after(sec);(MS.renderRecs?MS.renderRecs(sec):Promise.reject(new Error("старая версия ms.js — обновите страницу"))).catch(e=>{console.error(e);sec.innerHTML='<p class="ms-why">Подборка недоступна: '+esc(e.message||e)+"</p>"})}}
 
 })();
 </script></body></html>

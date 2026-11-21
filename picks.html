@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru" translate="no"><head><meta name="google" content="notranslate">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Подборки для вас — Молдавская прослушка</title><link rel="stylesheet" href="ms.css?v=2"><link rel="icon" type="image/png" href="favicon.png"></head>
+<body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app" aria-live="polite">
+<h1 class="ms-h1">Подборки для вас</h1>
+<p class="ms-lead">Материалы, подобранные по тому, что вы читаете и сохраняете в избранное.</p>
+<div id="rec"><div class="ms-empty">Подбираем…</div></div>
+<div class="ms-panel" style="margin-top:26px"><b>Как это работает</b>
+<p class="ms-lead" style="margin:6px 0 0;font-size:15px">Мы смотрим на темы статей, которые вы открывали и добавили в избранное, и поднимаем похожие материалы, особенно свежие. Прочитанное, избранное и скрытое («Не интересно») не повторяется. История чтения хранится только в вашем браузере.</p>
+<div class="ms-row" id="act" style="margin-top:14px"></div></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="ms.js?v=2"></script>
+<script>
+(async()=>{const {st}=MS;await MS.ready;MS.header();
+document.getElementById("act").innerHTML=(st.user?"":`<a class="ms-btn primary" href="${MS.loginUrl()}">Войти, чтобы учитывать избранное</a>`)+'<a class="ms-btn" href="favorites.html">Избранное</a><a class="ms-btn" href="category.html">Все публикации</a>';
+const el=document.getElementById("rec");
+try{if(!MS.renderRecs)throw new Error("старая версия ms.js — обновите страницу");await MS.renderRecs(el,12);
+if(!el.innerHTML.trim())el.innerHTML='<div class="ms-empty">Пока нечего предложить: вы уже всё прочитали или скрыли. Загляните позже или сбросьте историю в браузере.</div>'}
+catch(e){console.error(e);el.innerHTML='<div class="ms-msg err">Не удалось подобрать материалы: '+MS.esc(e.message||e)+'</div>'}
+})();
+</script></body></html>
