@@ -1,0 +1,113 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Молдавская прослушка</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="favicon.png"><link rel="apple-touch-icon" href="logo-light.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Прослушка">
+<meta name="theme-color" content="#fa541c">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<style>
+:root{--bg:#f6f1ea;--card:#fff;--tx:#201a15;--mu:#6f655b;--ac:#fa541c;--bd:#e8dfd3;--soft:#fff1eb;--r:16px;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1613;--card:#26211d;--tx:#f4eee7;--mu:#b3a89b;--ac:#ff6b35;--bd:#3b332c;--soft:#38251f;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:16px/1.6 Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding-top:env(safe-area-inset-top)}
+main{max-width:760px;margin:0 auto;padding:16px 16px calc(84px + env(safe-area-inset-bottom))}
+h1{font-size:28px;line-height:1.2;margin:8px 0 12px}h2{font-size:20px;margin:22px 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin:0 0 12px}
+.art{display:flex;gap:12px;cursor:pointer;padding:12px}.art img{width:84px;height:84px;object-fit:cover;border-radius:12px;flex:none;background:var(--soft)}
+.art b{display:block;line-height:1.3}.art small,.mu{color:var(--mu)}
+.tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:var(--soft);color:var(--ac);margin-right:6px}
+.tag.p{background:var(--ac);color:#fff}
+button,.btn{font:inherit;border:0;border-radius:14px;padding:12px 16px;background:var(--ac);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;min-height:44px}
+button.g,.btn.g{background:var(--soft);color:var(--ac)}button:disabled{opacity:.5}
+input{font:inherit;width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);margin:0 0 10px;min-height:44px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px}.chips button{flex:none;padding:8px 14px;min-height:36px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:9}
+nav button{flex:1;background:none;color:var(--mu);border-radius:0;font-size:12px;padding:8px 2px}nav button.on{color:var(--ac);font-weight:600}nav span{display:block;font-size:20px;line-height:1.1}
+.body{font-size:18px;line-height:1.75}.body img{max-width:100%;height:auto;border-radius:12px}.body p{margin:0 0 1em}
+.msg{padding:10px 14px;border-radius:12px;background:var(--soft);margin:0 0 10px}.empty{text-align:center;color:var(--mu);padding:30px 10px}
+.bar{position:fixed;top:env(safe-area-inset-top);left:0;height:3px;background:var(--ac);width:0;z-index:20}
+</style></head><body><div class="bar" id="bar"></div><main id="v"></main>
+<nav id="nav"></nav>
+<script>
+const SB="https://zfjkwdmfhbyohdmqogvp.supabase.co",KEY="sb_publishable_tMdL5NeAF9g2ikjt_LFNSg_wzvDm37e",PAY="https://bjyfhovdoxhxfsmspsia.supabase.co/functions/v1/create-premium-invoice",BOT="https://t.me/moldavskayproslyshka_bot",SITE=new URL("./",location.href).href;
+const sb=supabase.createClient(SB,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const $=s=>document.querySelector(s),v=$("#v");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fd=d=>d?new Date(d).toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"}):"";
+const S={user:null,sess:null,until:null,favs:new Set(),arts:null,cats:null,cat:"",q:"",tab:"home"};
+const prem=()=>!!S.until&&new Date(S.until)>new Date();
+const LS={g(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},s(k,x){try{localStorage.setItem(k,JSON.stringify(x))}catch{}}};
+async function load(){
+ const{data:{session}}=await sb.auth.getSession();S.sess=session;S.user=session?.user||null;S.until=null;S.favs=new Set();
+ if(S.user){const[a,b]=await Promise.all([sb.from("subscriptions").select("premium_until").eq("user_id",S.user.id).maybeSingle(),sb.from("favorites").select("article_id").eq("user_id",S.user.id)]);
+  S.until=a.data?.premium_until||null;S.favs=new Set((b.data||[]).map(r=>r.article_id))}
+ if(!S.arts){const[a,c]=await Promise.all([sb.from("articles").select("id,slug,title,subtitle,cover_url,access,published_at,categories(slug,name)").eq("status","published").order("published_at",{ascending:false}).limit(100),sb.from("categories").select("id,slug,name").order("sort_order")]);
+  S.arts=a.data||[];S.cats=c.data||[]}
+}
+const card=a=>`<div class="card art" data-s="${esc(a.slug)}">${a.cover_url?`<img loading="lazy" src="${esc(a.cover_url)}" alt="">`:""}<div><span class="tag">${esc(a.categories?.name||"")}</span>${a.access==="premium"?'<span class="tag p">Premium</span>':""}<b>${esc(a.title)}</b><small>${esc(a.subtitle||"")}</small></div></div>`;
+const bind=()=>v.querySelectorAll("[data-s]").forEach(e=>e.onclick=()=>go("a:"+e.dataset.s));
+function nav(){const T=[["home","🏠","Главная"],["read","📖","Читать"],["games","🎮","Игры"],["top","🏆","Рейтинг"],["me","👤","Профиль"]];
+ $("#nav").innerHTML=T.map(([k,i,t])=>`<button class="${S.tab===k?"on":""}" data-t="${k}"><span>${i}</span>${t}</button>`).join("");
+ $("#nav").querySelectorAll("button").forEach(b=>b.onclick=()=>go(b.dataset.t))}
+function go(h){location.hash=h}
+async function route(){
+ const h=location.hash.slice(1)||"home";$("#bar").style.width="0";window.onscroll=null;
+ if(h.startsWith("a:")){S.tab="read";nav();return article(h.slice(2))}
+ S.tab=h;nav();({home,read,games,top,me}[h]||home)();window.scrollTo(0,0)}
+function home(){
+ const hist=LS.g("hist",[]),cont=hist.map(x=>S.arts.find(a=>a.slug===x.slug&&x.pos>3&&x.pos<97)).find(Boolean);
+ const fav=S.arts.filter(a=>S.favs.has(a.id)).map(a=>a.categories?.slug),pref=a=>fav.includes(a.categories?.slug)&&!S.favs.has(a.id);
+ const rec=S.arts.filter(pref).slice(0,3),fresh=S.arts.slice(0,5);
+ v.innerHTML=`<h1>${S.user?"Привет! 👋":"Молдавская прослушка"}</h1>
+ ${S.user?`<div class="card">${prem()?`⭐ Premium до <b>${fd(S.until)}</b>`:`Premium не активен. <a href="#me">Оформить</a>`}</div>`:`<div class="card"><b>Войдите, чтобы читать Premium и сохранять избранное.</b><br><br><a class="btn" href="#me">Войти</a></div>`}
+ ${cont?`<h2>Продолжить чтение</h2>${card(cont)}`:""}${rec.length?`<h2>Рекомендуем вам</h2>${rec.map(card).join("")}`:""}
+ <h2>Новое</h2>${fresh.map(card).join("")||'<div class="empty">Пока пусто</div>'}`;bind()}
+function read(){
+ const list=()=>S.arts.filter(a=>(!S.cat||a.categories?.slug===S.cat||(S.cat==="fav"&&S.favs.has(a.id)))&&(!S.q||(a.title+" "+(a.subtitle||"")).toLowerCase().includes(S.q.toLowerCase())));
+ v.innerHTML=`<h1>Читать</h1><input id="q" type="search" placeholder="Поиск по названию" value="${esc(S.q)}">
+ <div class="chips">${[["","Все"],["fav","★ Избранное"],...S.cats.map(c=>[c.slug,c.name])].map(([s,n])=>`<button class="${S.cat===s?"":"g"}" data-c="${esc(s)}">${esc(n)}</button>`).join("")}</div><div id="l"></div>`;
+ const draw=()=>{const l=list();$("#l").innerHTML=l.map(card).join("")||'<div class="empty">Ничего не найдено</div>';bind()};draw();
+ $("#q").oninput=e=>{S.q=e.target.value;draw()};v.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{S.cat=b.dataset.c;read()})}
+async function article(slug){
+ v.innerHTML='<div class="empty">Загрузка…</div>';
+ const t=S.sess?.access_token||KEY;let r;
+ try{r=await(await fetch(`${SB}/functions/v1/get-article?slug=${encodeURIComponent(slug)}`,{headers:{apikey:KEY,Authorization:"Bearer "+t}})).json()}catch{r=null}
+ if(!r?.ok){v.innerHTML=`<div class="card">Не удалось открыть публикацию.<br><br><a class="btn g" href="#read">← К списку</a></div>`;return}
+ const a=r.article,meta=S.arts.find(x=>x.slug===slug),fav=meta&&S.favs.has(meta.id);
+ v.innerHTML=`<a href="#read" class="mu">← Назад</a>${a.cover_url?`<img src="${esc(a.cover_url)}" alt="${esc(a.cover_alt||"")}" style="width:100%;border-radius:16px;margin:10px 0">`:""}
+ <h1>${esc(a.title)}</h1><div class="mu">${esc(a.categories?.name||"")} · ${fd(a.published_at)}</div>
+ ${meta&&S.user?`<p><button class="g" id="fv">${fav?"★ В избранном":"☆ В избранное"}</button></p>`:""}
+ ${r.locked?`<div class="card body">${a.preview_html?DOMPurify.sanitize(a.preview_html):""}</div><div class="card"><b>Продолжение — для Premium</b><p class="mu">${S.user?"Оформите Premium, чтобы читать целиком.":"Войдите и оформите Premium."}</p><a class="btn" href="#me">${S.user?"Оформить Premium":"Войти"}</a></div>`
+  :`<div class="body" id="bd">${DOMPurify.sanitize(r.body_html||"",{ADD_ATTR:["target"]})}</div>`}`;
+ const fv=$("#fv");if(fv)fv.onclick=async()=>{fv.disabled=true;
+  if(S.favs.has(meta.id)){await sb.from("favorites").delete().eq("article_id",meta.id);S.favs.delete(meta.id)}else{await sb.from("favorites").insert({article_id:meta.id});S.favs.add(meta.id)}
+  article(slug)};
+ const rec=LS.g("hist",[]).find(x=>x.slug===slug);window.scrollTo(0,0);
+ if(!r.locked){if(rec&&rec.pos>3&&rec.pos<97)setTimeout(()=>window.scrollTo(0,(document.body.scrollHeight-innerHeight)*rec.pos/100),50);
+  window.onscroll=()=>{const m=document.body.scrollHeight-innerHeight,p=m>0?Math.round(scrollY/m*100):0;$("#bar").style.width=p+"%";
+   const h=LS.g("hist",[]).filter(x=>x.slug!==slug);h.unshift({slug,pos:p});LS.s("hist",h.slice(0,30))}}}
+function games(){v.innerHTML=`<h1>Игры</h1><p class="mu">Игры сейчас работают в Telegram-боте: очки и рейтинг считает сервер.</p>
+ ${[["⚡","Испытание дня","Одна попытка в сутки, серия дней"],["🎮","Факт или заблуждение","10 раундов в сутки"],["🧠","Обмани свой мозг","10 раундов в сутки"],["🧩","Ассоциации","До 3 подсказок, чем раньше — тем больше очков"]].map(([i,t,d])=>`<div class="card"><b>${i} ${t}</b><br><small class="mu">${d}</small></div>`).join("")}
+ <a class="btn" href="${BOT}" target="_blank" rel="noopener">Играть в боте</a> <a class="btn g" href="${SITE}quiz.html">Тест на сайте</a>`}
+function top(){v.innerHTML=`<h1>Рейтинг</h1><div class="card">Рейтинг игроков пока ведётся в боте: кнопка «🏆 Рейтинг» в меню. Общий рейтинг в приложении появится после привязки Telegram к профилю.</div><a class="btn" href="${BOT}" target="_blank" rel="noopener">Открыть рейтинг в боте</a>`}
+function me(){
+ if(!S.user){v.innerHTML=`<h1>Вход</h1><div class="card"><input id="e" type="email" placeholder="Почта" autocomplete="email"><input id="p" type="password" placeholder="Пароль" autocomplete="current-password"><div id="m"></div><button id="in">Войти</button> <button class="g" id="up">Регистрация</button><p class="mu" style="margin:12px 0 0">Тот же аккаунт, что и на сайте.</p></div>`;
+  const msg=t=>$("#m").innerHTML=`<div class="msg">${esc(t)}</div>`;
+  $("#in").onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$("#e").value.trim(),password:$("#p").value});error?msg("Неверная почта или пароль."):(await load(),route())};
+  $("#up").onclick=async()=>{const{error}=await sb.auth.signUp({email:$("#e").value.trim(),password:$("#p").value,options:{emailRedirectTo:location.href}});msg(error?error.message:"Письмо отправлено: подтвердите почту и войдите.")};return}
+ v.innerHTML=`<h1>Профиль</h1><div class="card"><b>${esc(S.user.email)}</b><br>${prem()?`⭐ Premium до <b>${fd(S.until)}</b>`:'<span class="mu">Premium не активен</span>'}<br><small class="mu">Избранное: ${S.favs.size}</small></div>
+ <h2>Premium</h2><div class="card"><div id="m"></div><p class="mu" style="margin-top:0">Оплата звёздами Telegram. Срок добавляется к текущему.</p>
+ <button id="b10">10 дней · 50 ⭐</button> <button id="b31">31 день · 150 ⭐</button><p class="mu">После оплаты вернитесь сюда: статус обновится.</p></div>
+ <div class="card"><b>Промокод</b><input id="pc" placeholder="Введите промокод" style="margin-top:8px"><button class="g" id="pa">Активировать</button></div>
+ <button class="g" id="out">Выйти</button>`;
+ const msg=t=>$("#m").innerHTML=`<div class="msg">${esc(t)}</div>`;
+ const buy=d=>async()=>{msg("Создаём счёт…");try{const r=await(await fetch(PAY,{method:"POST",headers:{"Content-Type":"application/json",apikey:KEY},body:JSON.stringify({days:d,access_token:S.sess.access_token})})).json();
+  r.ok?(location.href=r.link):msg(r.error||"Не удалось создать счёт")}catch{msg("Нет связи. Попробуйте позже.")}};
+ $("#b10").onclick=buy(10);$("#b31").onclick=buy(31);
+ $("#pa").onclick=async()=>{try{const r=await(await fetch(`${SB}/functions/v1/activate-promo`,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+S.sess.access_token,"Content-Type":"application/json"},body:JSON.stringify({code:$("#pc").value})})).json();
+  if(r.ok){await load();me()}else msg(r.error||"Не удалось")}catch{msg("Нет связи.")}};
+ $("#out").onclick=async()=>{await sb.auth.signOut();await load();route()}}
+sb.auth.onAuthStateChange((e)=>{if(e==="SIGNED_IN"||e==="SIGNED_OUT")load().then(route)});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&S.user)load().then(()=>{if(S.tab==="me"||S.tab==="home")route()})});
+addEventListener("hashchange",route);
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+load().then(route).catch(()=>{v.innerHTML='<div class="card">Не удалось загрузить данные. Проверьте соединение.</div>'});
+</script></body></html>
