@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ru" translate="no"><head><meta name="google" content="notranslate">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Публикации — Молдавская прослушка</title><link rel="stylesheet" href="ms.css"><link rel="icon" type="image/png" href="favicon.png"></head>
+<title>Публикации — Молдавская прослушка</title><link rel="stylesheet" href="ms.css?v=2"><link rel="icon" type="image/png" href="favicon.png"></head>
 <body class="ms-page"><header id="ms-header"></header><main class="ms-wrap" id="app" aria-live="polite"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="ms.js"></script>
+<script src="ms.js?v=2"></script>
 <script>
 (async()=>{const {sb,st,esc,fmtDate}=MS;await MS.ready;MS.header();const app=document.getElementById("app");
 
@@ -18,7 +18,7 @@ const {data,error}=await qy;
 const chips=`<div class="ms-chips"><a href="category.html"${!cur&&!q?' class="on"':""}>Все</a>${cats.map(c=>`<a href="${c.link_url?esc(c.link_url):"category.html?c="+encodeURIComponent(c.slug)}"${cur&&cur.id===c.id?' class="on"':""}>${esc(c.name)}</a>`).join("")}</div>`;
 const head=cur?`<h1 class="ms-h1">${esc(cur.name)}</h1><p class="ms-lead">${esc(cur.description)}</p>`:q?`<h1 class="ms-h1">Поиск: «${esc(q)}»</h1>`:`<h1 class="ms-h1">Все публикации</h1>`;
 app.innerHTML=head+chips+(error?'<div class="ms-msg err">Не удалось загрузить публикации.</div>':data&&data.length?`<div class="ms-grid">${data.map(MS.cardHTML).join("")}</div>`:'<div class="ms-empty">Здесь пока нет публикаций.</div>');
-if(!cur&&!q){const ch=app.querySelector(".ms-chips");if(ch){const sec=document.createElement("section");sec.id="rec";ch.after(sec);MS.renderRecs(sec).catch(()=>{})}}
+if(!cur&&!q){const ch=app.querySelector(".ms-chips");if(ch){const sec=document.createElement("section");sec.id="rec";ch.after(sec);(MS.renderRecs?MS.renderRecs(sec):Promise.reject(new Error("старая версия ms.js — обновите страницу"))).catch(e=>{console.error(e);sec.innerHTML='<p class="ms-why">Подборка недоступна: '+esc(e.message||e)+"</p>"})}}
 
 })();
 </script></body></html>
