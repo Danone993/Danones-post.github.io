@@ -212,6 +212,61 @@
     const a = e.target.closest(".ms-card a"); if (a) { const c = a.closest(".ms-card"); noteRead(c.dataset.slug, c.dataset.cat); }
   });
 
-  window.MS = { sb, st, BASE, esc, fmtDate, isPremium, refresh, categories, toast, safeNext, loginUrl, cardHTML, bookmarkBtn, header, openDrawer, closeDrawer, fetchArticle, activatePromo, ICON_BM, noteRead, rankRecs, renderRecs,
+
+  /* ---- Интерактивные диаграммы в тексте поста ----
+     Разметка: <div class="ms-chart" data-type="pie|donut" data-title="…" data-labels="А|Б|В" data-values="2|10|8" data-colors="#…|#…|#…">запасной текст</div> */
+  function initCharts(root) {
+    (root || document).querySelectorAll(".ms-chart:not([data-ready])").forEach(function (el) {
+      const L = (el.dataset.labels || "").split("|"), V = (el.dataset.values || "").split("|").map(Number), T = V.reduce(function (a, b) { return a + b; }, 0);
+      if (!T || L.length !== V.length || V.some(isNaN)) return;
+      el.dataset.ready = "1";
+      const NS = "http://www.w3.org/2000/svg", P = (el.dataset.colors || "#fa541c|#7c5cff|#14b8a6|#f5b301|#e83e8c").split("|");
+      const donut = el.dataset.type === "donut", R = 90, r = donut ? 52 : 0, cx = 100, cy = 100;
+      const pt = function (rad, a) { return (cx + rad * Math.cos(a)).toFixed(2) + " " + (cy + rad * Math.sin(a)).toFixed(2); };
+      const pc = function (v) { return (Math.round(v / T * 1000) / 10).toString().replace(".", ","); };
+      const word = function (n) { const m = n % 100, k = n % 10; return m > 10 && m < 15 ? "голосов" : k === 1 ? "голос" : k > 1 && k < 5 ? "голоса" : "голосов"; };
+      const svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("viewBox", "0 0 200 200"); svg.setAttribute("class", "ms-chart-svg"); svg.setAttribute("role", "group"); svg.setAttribute("aria-label", el.dataset.title || "Диаграмма");
+      const fig = document.createElement("figure");
+      if (el.dataset.title) { const cap = document.createElement("figcaption"); cap.textContent = el.dataset.title; fig.appendChild(cap); }
+      const legend = document.createElement("div"); legend.className = "ms-legend";
+      const detail = document.createElement("div"); detail.className = "ms-detail"; detail.setAttribute("aria-live", "polite"); detail.textContent = "Нажмите на сегмент или подпись";
+      const slices = [], btns = []; let sel = -1, a = -Math.PI / 2;
+      const select = function (i) {
+        sel = sel === i ? -1 : i;
+        slices.forEach(function (s, k) { s.p.classList.toggle("on", k === sel); s.p.setAttribute("transform", k === sel ? "translate(" + (Math.cos(s.m) * 7).toFixed(2) + " " + (Math.sin(s.m) * 7).toFixed(2) + ")" : ""); });
+        btns.forEach(function (b, k) { b.setAttribute("aria-pressed", k === sel ? "true" : "false"); });
+        el.classList.toggle("has-sel", sel > -1);
+        detail.innerHTML = sel > -1 ? "<b></b>" : "";
+        if (sel > -1) { detail.firstChild.textContent = L[sel]; detail.appendChild(document.createTextNode(": " + V[sel] + " " + word(V[sel]) + " из " + T + " (" + pc(V[sel]) + "%)")); } else detail.textContent = "Нажмите на сегмент или подпись";
+      };
+      V.forEach(function (v, i) {
+        const da = v / T * 2 * Math.PI, b = a + da, big = da > Math.PI ? 1 : 0, col = P[i % P.length];
+        if (v > 0) {
+          let d;
+          if (v === T) d = "M" + pt(R, a) + " A" + R + " " + R + " 0 1 1 " + pt(R, a + Math.PI) + " A" + R + " " + R + " 0 1 1 " + pt(R, a) + (r ? " M" + pt(r, a) + " A" + r + " " + r + " 0 1 0 " + pt(r, a + Math.PI) + " A" + r + " " + r + " 0 1 0 " + pt(r, a) : "") + " Z";
+          else d = "M" + pt(R, a) + " A" + R + " " + R + " 0 " + big + " 1 " + pt(R, b) + " L" + (r ? pt(r, b) + " A" + r + " " + r + " 0 " + big + " 0 " + pt(r, a) : cx + " " + cy) + " Z";
+          const p = document.createElementNS(NS, "path");
+          p.setAttribute("d", d); p.setAttribute("fill", col); p.setAttribute("fill-rule", "evenodd"); p.setAttribute("class", "ms-slice");
+          p.setAttribute("tabindex", "0"); p.setAttribute("role", "button"); p.setAttribute("aria-label", L[i] + ": " + V[i] + " (" + pc(v) + "%)");
+          p.addEventListener("click", function () { select(i); });
+          p.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(i); } });
+          svg.appendChild(p); slices[i] = { p: p, m: a + da / 2 };
+        } else slices[i] = { p: document.createElementNS(NS, "path"), m: 0 };
+        const bt = document.createElement("button"); bt.type = "button"; bt.className = "ms-leg"; bt.setAttribute("aria-pressed", "false");
+        const dot = document.createElement("i"); dot.style.background = col; bt.appendChild(dot);
+        bt.appendChild(document.createTextNode(L[i] + " — " + V[i] + " (" + pc(v) + "%)"));
+        bt.addEventListener("click", function () { select(i); }); legend.appendChild(bt); btns[i] = bt;
+        a = b;
+      });
+      fig.appendChild(svg); fig.appendChild(legend); fig.appendChild(detail);
+      el.textContent = ""; el.appendChild(fig);
+    });
+  }
+  (function () { let q = 0; const run = function () { q = 0; try { initCharts(document); } catch (e) { console.error(e); } };
+    new MutationObserver(function () { if (!q) q = requestAnimationFrame(run); }).observe(document.documentElement, { childList: true, subtree: true });
+    if (document.readyState !== "loading") run(); else document.addEventListener("DOMContentLoaded", run); })();
+
+  window.MS = { sb, st, BASE, esc, fmtDate, isPremium, refresh, categories, toast, safeNext, loginUrl, cardHTML, bookmarkBtn, header, openDrawer, closeDrawer, fetchArticle, activatePromo, ICON_BM, noteRead, rankRecs, renderRecs, initCharts,
     ready: refresh().then(s => { trackVisit(); if (!s.user) trackAnon(); return s; }), track };
 })();

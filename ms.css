@@ -100,3 +100,9 @@ body.dark .ms-msg.err{background:#3a1f1c;color:#ff9c91}body.dark .ms-msg.ok{back
 .ms-prose ul,.ms-prose ol{padding-left:1.3em}.ms-prose li{margin:.5em 0}
 
 .ms-rec-h{margin:18px 0 12px}.ms-why{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--ms-muted);margin:6px 4px 14px}.ms-why button{background:none;border:0;color:var(--ms-muted);text-decoration:underline;cursor:pointer;font:inherit;padding:6px;min-height:32px}
+
+.ms-chart{margin:22px 0}.ms-chart figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:12px}.ms-chart figcaption{font-weight:700;text-align:center;max-width:36em}
+.ms-chart-svg{width:min(100%,280px);height:auto;overflow:visible}.ms-slice{cursor:pointer;stroke:var(--ms-bg,#fff);stroke-width:2;transition:transform .18s ease,opacity .18s ease;outline:none}
+.ms-slice:focus-visible{stroke:var(--ms-text,#000);stroke-width:3}.ms-chart.has-sel .ms-slice:not(.on){opacity:.5}
+.ms-legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.ms-leg{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--ms-border,#ddd);background:transparent;color:inherit;border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer;min-height:40px}
+.ms-leg i{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}.ms-leg[aria-pressed=true]{border-color:var(--ms-accent,#fa541c);font-weight:700}.ms-detail{min-height:1.7em;text-align:center;color:var(--ms-muted,#888)}
