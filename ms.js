@@ -51,7 +51,7 @@
     const cover = a.cover_url ? `<img class="ms-cover" loading="lazy" src="${esc(a.cover_url)}" alt="${esc(a.cover_alt || "")}">` : '<div class="ms-cover" role="img" aria-label=""></div>';
     return `<article class="ms-card" data-slug="${esc(a.slug)}" data-cat="${esc(cat.slug || "")}">${bookmarkBtn(a.id)}${cover}<div class="ms-card-b">
       <div><span class="ms-tag">${esc(cat.name || "")}</span></div>
-      <h3><a href="${a.source_url ? esc(a.source_url) : "article.html?a=" + encodeURIComponent(a.slug)}">${esc(a.title)}</a></h3>
+      <h3><a href="${a.source_url && !/^index\.html#p-/.test(a.source_url) ? esc(a.source_url) : "article.html?a=" + encodeURIComponent(a.slug)}">${esc(a.title)}</a></h3>
       ${a.subtitle ? `<p>${esc(a.subtitle)}</p>` : ""}
       <div class="ms-meta"><span>${esc(fmtDate(a.published_at))}</span>
       <span class="ms-tag${a.access === "premium" ? " prem" : ""}">${a.access === "premium" ? "★ Premium" : "Бесплатно"}</span></div></div></article>`;

@@ -12,8 +12,11 @@
 MS.header();
 const slug=new URLSearchParams(location.search).get("a")||"";
 const {data:src}=await sb.from("articles").select("source_url").eq("slug",slug).maybeSingle();
-if(src&&src.source_url){location.replace(src.source_url);return}
-let d;try{d=await MS.fetchArticle(slug)}catch(e){app.innerHTML=`<div class="ms-empty"><p><b>${e.status===404?"Материал не найден":"Не удалось загрузить материал"}</b></p><a class="ms-btn" href="category.html">Ко всем публикациям</a></div>`;return}
+const LG=src&&src.source_url&&/^index\.html#p-([a-z0-9-]+)$/.exec(src.source_url);
+if(src&&src.source_url&&!LG){location.replace(src.source_url);return}
+let d;
+if(LG){try{const [r,m]=await Promise.all([fetch("posts/"+LG[1]+".html"),sb.from("articles").select("id,slug,title,subtitle,cover_url,cover_alt,access,published_at,seo_title,seo_description,categories(slug,name)").eq("slug",slug).single()]);if(r.ok&&!m.error&&m.data.access==="free")d={ok:true,locked:false,article:m.data,body_html:await r.text()}}catch(_){}}
+if(!d)try{d=await MS.fetchArticle(slug)}catch(e){app.innerHTML=`<div class="ms-empty"><p><b>${e.status===404?"Материал не найден":"Не удалось загрузить материал"}</b></p><a class="ms-btn" href="category.html">Ко всем публикациям</a></div>`;return}
 const a=d.article,cat=a.categories||{};MS.noteRead(slug,cat.slug);document.title=(a.seo_title||a.title)+" — Молдавская прослушка";
 const md=document.querySelector('meta[name=description]')||document.head.appendChild(Object.assign(document.createElement("meta"),{name:"description"}));md.content=a.seo_description||a.subtitle||"";
 const clean=h=>DOMPurify.sanitize(h||"",{ADD_TAGS:["video"],ADD_ATTR:["autoplay","loop","muted","playsinline","target"]});
